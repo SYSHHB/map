@@ -1,5 +1,5 @@
 // Keeps the app shell available offline. Records always come live from OneDrive.
-const CACHE = "school-map-v1";
+const CACHE = "school-map-v3";
 self.addEventListener("install", e => { self.skipWaiting(); });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));

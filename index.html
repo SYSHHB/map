@@ -4,11 +4,15 @@
 <meta charset="utf-8">
 <script>(function(){try{var t=localStorage.getItem("syshhb_theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=t}catch(e){}})()</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>School Map · Yayasan SHHB</title>
-<meta name="theme-color" content="#006b45">
+<title>SYSHHB Map</title>
+<meta name="apple-mobile-web-app-title" content="SYSHHB Map">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" id="themeColor" content="#0f4123">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
 <style>
 :root{
@@ -373,7 +377,7 @@ html,body{overscroll-behavior:none}
   <header class="top">
     <div class="brand">
       <img class="logo" src="logo.png" alt="Yayasan Sultan Haji Hassanal Bolkiah">
-      <div><h1>School map</h1><p>Yayasan Sultan Haji Hassanal Bolkiah</p></div>
+      <div><h1>SYSHHB Map</h1><p>Yayasan Sultan Haji Hassanal Bolkiah</p></div>
     </div>
     <div class="yearbox">
       <label for="year">Year</label>
@@ -459,7 +463,7 @@ html,body{overscroll-behavior:none}
   <section class="al-left" aria-hidden="true">
     <img class="al-mark" src="logo.png" alt="">
     <i class="ff f1"></i><i class="ff f2"></i><i class="ff f3"></i><i class="ff f4"></i><i class="ff f5"></i><i class="ff f6"></i>
-    <div class="al-brand"><img src="logo.png" alt=""><b>School Map</b></div>
+    <div class="al-brand"><img src="logo.png" alt=""><b>SYSHHB Map</b></div>
     <div class="al-dates">
       <div class="al-d"><div class="al-big yel" id="alDay">--</div><b id="alMonth"></b><span id="alGregL" data-i18n="gregorian">Gregorian</span></div>
       <div class="al-d al-sep"><div class="al-big" id="alHDay">--</div><b id="alHMonth"></b><span data-i18n="hijri">Hijri</span></div>
@@ -470,7 +474,7 @@ html,body{overscroll-behavior:none}
   <div class="al-right">
     <div class="auth-card loading" id="authCard">
       <div class="ld-logo"><img src="logo.png" alt="Yayasan Sultan Haji Hassanal Bolkiah logo"></div>
-      <h2>School Map</h2>
+      <h2>SYSHHB Map</h2>
       <div class="wl">
         <h3 data-i18n="welcome">Welcome</h3><div class="wl-sub" data-i18n="signin_to">Sign in to continue</div>
         <p class="wl-desc" data-i18n="desc">Use your school email (@syayasan.edu.bn) to view the school maps and class names.</p>
@@ -881,11 +885,12 @@ function ldStep(n){
 }
 function authMsg(t,isErr){const el=$('authStatus'); el.textContent=t||''; el.className=isErr?'err':''}
 function showLogin(msg,isErr){
-  conn='signin'; ldN=0; const ov=$('login'); ov.hidden=false; ov.style.display=''; ov.classList.remove('fade','loading'); $('authCard').classList.remove('loading');
+  barColor('#0f4123'); conn='signin'; ldN=0; const ov=$('login'); ov.hidden=false; ov.style.display=''; ov.classList.remove('fade','loading'); $('authCard').classList.remove('loading');
   authMsg(msg,isErr); $('btnLogin').hidden=!msalApp||!!isErr; $('retryBtn').hidden=!isErr; clockTick(); paintStatus();
 }
+function barColor(c){const m=$('themeColor'); if(m)m.setAttribute('content',c)}
 function hideAuth(){
-  ldStep(5); const ov=$('login'); setTimeout(()=>{ov.classList.add('fade'); setTimeout(()=>{ov.style.display='none'; clearInterval(clockTimer)},470)},350);
+  barColor(currentTheme()==='dark'?'#245c30':'#168a4e'); ldStep(5); const ov=$('login'); setTimeout(()=>{ov.classList.add('fade'); setTimeout(()=>{ov.style.display='none'; clearInterval(clockTimer)},470)},350);
 }
 $('retryBtn').onclick=()=>location.reload();
 applyI18n(); clockTimer=setInterval(clockTick,1000); ldStep(1);
