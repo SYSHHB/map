@@ -213,12 +213,14 @@ tr.chg .cellin{border-color:var(--hi);box-shadow:inset 3px 0 0 var(--hi)}
 .modal select{width:100%;height:38px;border:1px solid var(--line);border-radius:9px;background:var(--surface2);padding:0 10px}
 #printArea{display:none}
 @media print{
-  @page{size:A4 landscape;margin:7mm}
+  @page{size:A4 landscape;margin:6mm}
   html,body{height:auto;background:#fff}
   #app,.scrim,#toast,.auth-overlay{display:none!important}
   #printArea{display:block}
   .pp{break-after:page;page-break-after:always}.pp:last-child{break-after:auto;page-break-after:auto}
-  .pp svg{width:100%;height:auto;display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pp{height:196mm;overflow:hidden;display:flex;flex-direction:column}
+  .pp svg{width:100%;height:187mm;display:block;flex:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pp .pf{height:7mm;display:flex;align-items:center;justify-content:space-between;font:11px Carlito,Calibri,Arial,sans-serif;color:#444;border-top:.3mm solid #999;margin-top:2mm;padding-top:1mm}
   .pp .lbl{font-family:Carlito,Calibri,Arial,sans-serif;fill:#000}
   .pp .ttl{font-family:Carlito,Calibri,Arial,sans-serif;font-weight:700;font-size:17px;letter-spacing:4.4px;text-anchor:middle}
 }
@@ -516,7 +518,7 @@ html,body{overscroll-behavior:none}
   </div>
 </div>
 <div class="scrim" id="logScrim"><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="lgT"><h2 id="lgT">Change log</h2><p>The latest 100 name changes, newest first.</p><div class="logBox"><table class="logTbl"><tbody id="logBody"></tbody></table></div><div class="acts"><button class="btn" id="logClose" type="button">Close</button></div></div></div>
-<div class="scrim" id="prScrim"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="prT"><h2 id="prT">Print the map</h2><p>Each map prints on one landscape page with the selected year in the title.</p>
+<div class="scrim" id="prScrim"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="prT"><h2 id="prT">Print the map</h2><p>Each map is fitted to one A4 landscape page, with the selected year in the title.</p>
 <div class="fld"><label>What to print</label><label class="rad"><input type="radio" name="prScope" value="this" checked> This map only</label><label class="rad"><input type="radio" name="prScope" value="all"> All four maps</label></div>
 <div class="fld"><label for="prMode">Labels</label><select id="prMode"><option value="both">Room code and class name</option><option value="name">Class name only</option><option value="code">Room code only</option></select></div>
 <div class="acts"><button class="btn" id="prCancel" type="button">Cancel</button><button class="btn primary" id="prGo" type="button">Print</button></div></div></div>
@@ -1196,7 +1198,8 @@ function staticMap(i,mode,year,noLabels){
 function doPrint(){
   const all=document.querySelector('input[name=prScope]:checked').value==='all'; const mode=$('prMode').value;
   const pa=$('printArea'); pa.innerHTML='';
-  (all?[0,1,2,3]:[S.page]).forEach(i=>{const d=document.createElement('section'); d.className='pp'; d.appendChild(staticMap(i,mode,S.year)); pa.appendChild(d)});
+  (all?[0,1,2,3]:[S.page]).forEach(i=>{const d=document.createElement('section'); d.className='pp'; d.appendChild(staticMap(i,mode,S.year));
+    const pf=document.createElement('div'); pf.className='pf'; const L=document.createElement('span'); L.textContent='SYSHHB Map · Yayasan Sultan Haji Hassanal Bolkiah · '+S.year; const R=document.createElement('span'); R.textContent='Printed '+new Date().toLocaleDateString('en-GB',{timeZone:TZ,day:'numeric',month:'short',year:'numeric'})+' · A4'; pf.append(L,R); d.appendChild(pf); pa.appendChild(d)});
   $('prScrim').classList.remove('open');
   setTimeout(()=>window.print(),80);
 }
