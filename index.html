@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>(function(){try{var t=localStorage.getItem("syshhb_theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=t}catch(e){}})()</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>School Map · Yayasan SHHB</title>
-<meta name="theme-color" content="#0E5A30">
+<meta name="theme-color" content="#006b45">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -14,21 +15,18 @@
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
-  --bg:#E7F1E9; --surface:#FFFFFF; --surface2:#F3F8F4; --ink:#0E5A30; --muted:#4D6A58; --line:#CBDDCF;
-  --on-ink:#FFFFFF; --hi:#FFE83A; --match:#D6006C; --good:#1F8A4C; --warn:#B45309; --bad:#B42318;
+  --bg:#f4f7f5; --surface:#ffffff; --surface2:#f8fbf9; --ink:#132a22; --muted:#5f7a70; --line:#e1ebe5; --line2:#cfdfd6;
+  --brand:#006b45; --brand2:#00824f; --brand-soft:#e7f5ec; --gold:#f3d83d; --on-ink:#ffffff;
+  --head1:#168a4e; --head2:#0f7a45;
+  --hi:#f3d83d; --match:#D6006C; --good:#14915a; --warn:#b7791f; --bad:#c53f4e;
   --fh:'Bricolage Grotesque','Trebuchet MS','Segoe UI',system-ui,sans-serif;
   --fb:'Hanken Grotesk','Segoe UI',system-ui,-apple-system,sans-serif;
   color-scheme:light;
 }
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --bg:#0B1A11; --surface:#12261A; --surface2:#1A3324; --ink:#E8F3EA; --muted:#9DB8A5; --line:#2A4634;
-    --on-ink:#0B1A11; --good:#4CC38A; --warn:#F2B35A; --bad:#FF8A7A; color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#0B1A11; --surface:#12261A; --surface2:#1A3324; --ink:#E8F3EA; --muted:#9DB8A5; --line:#2A4634;
-  --on-ink:#0B1A11; --good:#4CC38A; --warn:#F2B35A; --bad:#FF8A7A; color-scheme:dark;
+:root[data-theme=dark]{
+  --bg:#101a15; --surface:#18241f; --surface2:#13201a; --ink:#e3eee8; --muted:#93ab9f; --line:#26382d; --line2:#32493b;
+  --brand:#13804f; --brand2:#18975e; --brand-soft:#173327; --head1:#245c30; --head2:#143a21;
+  --good:#63d9a3; --warn:#f2c46a; --bad:#ff8f9b; color-scheme:dark;
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
 *,*::before,*::after{box-sizing:inherit}
@@ -213,7 +211,7 @@ tr.chg .cellin{border-color:var(--hi);box-shadow:inset 3px 0 0 var(--hi)}
 @media print{
   @page{size:A4 landscape;margin:7mm}
   html,body{height:auto;background:#fff}
-  #app,.scrim,#toast,.login{display:none!important}
+  #app,.scrim,#toast,.auth-overlay{display:none!important}
   #printArea{display:block}
   .pp{break-after:page;page-break-after:always}.pp:last-child{break-after:auto;page-break-after:auto}
   .pp svg{width:100%;height:auto;display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -222,11 +220,105 @@ tr.chg .cellin{border-color:var(--hi);box-shadow:inset 3px 0 0 var(--hi)}
 }
 .logo{width:42px;height:42px;flex:none;display:block}
 .lbox .logo{width:104px;height:104px;margin:0 auto 14px}
-.top{border-bottom:3px solid #A8936A}
-.tab[aria-selected=true]{background:#0E5A30;color:#fff}
-.btn.primary{color:#fff}
-:root[data-theme="dark"] .btn.primary,:root:not([data-theme="light"]) .btn.primary{color:var(--on-ink)}
-.chip i{border-color:#A8936A}
+
+/* ===== theme v2: Yayasan green, gold, dark mode (follows SYSHHB systems) ===== */
+.btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+.btn.primary:hover{background:var(--brand2);opacity:1}
+.tab[aria-selected=true]{background:var(--brand);color:#fff}
+#pName:focus,.cellin:focus{border-color:var(--brand)}
+#toast{background:var(--brand);color:#fff}
+.seg button[aria-pressed=true]{background:var(--brand-soft);color:var(--brand);box-shadow:inset 0 0 0 1px var(--line2)}
+:root[data-theme=dark] .seg button[aria-pressed=true]{color:#63d9a3}
+.empty h2{color:var(--brand)}:root[data-theme=dark] .empty h2{color:#55cf96}
+.p-code{color:var(--brand)}:root[data-theme=dark] .p-code{color:#55cf96}
+.chip i{border-color:#79c383}
+tr.chg .cellin{border-color:var(--gold);box-shadow:inset 3px 0 0 var(--gold)}
+.top{background:linear-gradient(180deg,var(--head1),var(--head2));border-bottom:3px solid var(--gold);color:#fff}
+.brand h1{color:#fff}.brand p{color:#d8efe2}
+.yearbox label{color:#d8efe2}
+select#year{background-color:#ffffff26;color:#fff;border-color:#ffffff40;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%23ffffff' stroke-width='1.8'/></svg>")}
+select#year option{color:#132a22;background:#fff}
+.top .btn{background:#ffffff1f;border-color:#ffffff40;color:#fff}.top .btn:hover{background:#ffffff33}
+.search input[type=search]{background:#ffffff26;border-color:#ffffff40;color:#fff}
+.search input[type=search]::placeholder{color:#e0efe5}
+.search .ic{color:#e0efe5}.search .allw{color:#e0efe5}
+.status{color:#d8efe2}.status i{background:#d8efe2}.status.ok i{background:#7bd77b}.status.busy i{background:var(--gold)}.status.err i{background:#ff8f9b}
+.who{color:#d8efe2}.who b{color:#fff}
+.icon-btn{width:36px;height:36px;border-radius:9px;border:1px solid #ffffff40;background:#ffffff1f;color:#fff;font-size:17px;display:inline-grid;place-items:center;padding:0}
+.icon-btn:hover{background:#ffffff33}
+.logo{filter:drop-shadow(0 1px 3px #0005)}
+
+/* ---- split-screen sign-in and splash loading (same as the other SYSHHB systems) ---- */
+.auth-overlay{position:fixed;inset:0;z-index:100;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr);background:linear-gradient(135deg,#0d1f17,#0b2a1a);transition:opacity .45s ease;color:#fff;font-family:var(--fb)}
+.auth-overlay.fade{opacity:0;pointer-events:none}
+.auth-prefs{position:fixed;top:16px;right:16px;display:flex;gap:6px;z-index:101}
+.lang-seg{display:inline-flex;background:#ffffff14;border:1px solid #ffffff26;border-radius:9px;padding:2px;gap:2px}
+.lang-seg button{border:0;background:transparent;color:#d8efe2;font-weight:700;font-size:12px;padding:5px 9px;border-radius:7px;cursor:pointer}
+.lang-seg button.on{background:#fff;color:#004d33}
+.auth-prefs .icon-btn{height:30px;width:34px;border-radius:9px;font-size:15px}
+.al-left{position:relative;overflow:hidden;color:#fff;padding:36px 64px;display:grid;grid-template-rows:auto 1fr auto auto;background:radial-gradient(700px 420px at 30% 0%,#4b8a6a55,transparent 70%),linear-gradient(180deg,#168a4e 0%,#0f7a45 50%,#0c6b3d 100%)}
+.al-mark{position:absolute;left:-6%;top:50%;width:96%;max-width:900px;transform:translateY(-48%);opacity:.12;filter:grayscale(.2);pointer-events:none}
+.al-brand{position:relative;display:flex;align-items:center;gap:12px;font-size:19px}
+.al-brand img{width:46px;height:46px;border-radius:50%;border:2px solid #e3d98a;background:#fff;padding:2px}
+.al-dates{position:relative;display:grid;grid-template-columns:1fr 1fr;align-self:center;margin-top:90px}
+.al-d{display:flex;flex-direction:column;gap:3px}
+.al-d.al-sep{border-left:1px solid #ffffff40;padding-left:40px}
+.al-big{font-size:112px;font-weight:900;line-height:.95;letter-spacing:-6px;color:#fff;margin-bottom:22px;font-family:var(--fh)}
+.al-big.yel{color:#f6ee3a}
+.al-d b{font-size:17px}.al-d span{font-size:14px;color:#e0efe5}
+.al-row{position:relative;display:flex;justify-content:space-between;align-items:flex-end;margin-top:150px}
+.al-greet,.al-clock{font-weight:800;font-size:19px}
+.al-clock{font-variant-numeric:tabular-nums}
+.al-note{position:relative;max-width:360px;font-size:16px;line-height:1.5;margin:40px 0 12px;color:#fff}
+.ff{position:absolute;width:5px;height:5px;border-radius:50%;background:#f3e48a;box-shadow:0 0 10px 3px #f3e48a88;animation:ffl 6s ease-in-out infinite}
+.f1{left:12%;top:18%}.f2{left:70%;top:30%;animation-delay:1s}.f3{left:30%;top:62%;animation-delay:2s}.f4{left:82%;top:70%;animation-delay:3s}.f5{left:55%;top:12%;animation-delay:4s}.f6{left:20%;top:84%;animation-delay:.5s}
+@keyframes ffl{0%,100%{opacity:.15;transform:translateY(0)}50%{opacity:1;transform:translateY(-14px)}}
+.al-right{display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(500px 360px at 0% 100%,#3a3320aa,transparent 70%),linear-gradient(135deg,#0f1d16,#0c2316)}
+.auth-card{background:linear-gradient(180deg,#1d2b24,#18241e);border:1px solid #2c4034;border-radius:26px;padding:38px 38px 26px;width:min(450px,100%);text-align:left;position:relative;box-shadow:0 24px 70px #0008}
+.auth-card::before{content:"";position:absolute;left:24px;right:24px;top:-1px;height:4px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,#3fae4d,#e3c04a,#3fae4d)}
+.auth-card .ld-logo,.auth-card h2,.auth-card .ld-sub{display:none}
+.wl h3{margin:0;font-size:31px;font-weight:800;color:#fff;font-family:var(--fh)}
+.wl-sub{font-size:16px;color:#d4e6da;margin:6px 0 14px}
+.wl-desc{font-size:14.5px;line-height:1.5;color:#c3d6ca;margin:0 0 24px}
+.ms-btn{width:100%;height:58px;margin:0 0 14px;border:0;border-radius:15px;font-size:17px;font-weight:700;color:#fff;gap:12px;justify-content:center;background:linear-gradient(180deg,#7bd77b,#3fae4d)!important;box-shadow:0 6px 18px #0006}
+.ms-btn:hover{filter:brightness(1.06)}
+.ms-logo{display:grid;grid-template-columns:9px 9px;gap:2px}.ms-logo i{width:9px;height:9px;display:block}
+#authStatus{font-size:13px;color:#cfe0d5;margin:0 0 14px;min-height:1px}
+#authStatus.err{color:#ff8a96}
+.wl-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.wl-tile{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:14px 8px;border-radius:15px;background:#202e27;border:1px solid #2f4538;font-size:12.5px;font-weight:700;color:#fff}
+.wl-tile span{color:#7bd77b}.wl-tile svg{width:24px;height:24px;display:block}
+.wl-secure{display:flex;align-items:center;gap:9px;font-size:12.5px;color:#9fbaa9}.wl-secure svg{width:18px;height:18px;flex:none;color:#7bd77b}
+.ld{display:none;margin-top:0;text-align:center}
+.ld-bar{height:6px;border-radius:6px;background:#414e43;overflow:hidden;max-width:330px;margin:0 auto}
+.ld-bar i{display:block;height:100%;width:6%;border-radius:6px;background:linear-gradient(90deg,#80cf77,#f1eb34);transition:width .6s ease}
+.ld-pct,.ld-thanks{display:none}
+.ld-steps{display:none}
+/* splash (loading) state */
+.auth-overlay.loading{grid-template-columns:1fr;background:linear-gradient(180deg,#0f4123 0%,#0b311c 100%)}
+.auth-overlay.loading .al-left,.auth-overlay.loading .auth-prefs{display:none}
+.auth-overlay.loading .al-right{background:none}
+.auth-card.loading{background:none;box-shadow:none;border:0;width:min(560px,100%);padding:10px;text-align:center}
+.auth-card.loading::before{display:none}
+.auth-card.loading .wl,.auth-card.loading .ms-btn,.auth-card.loading #authStatus{display:none}
+.auth-card.loading .ld-logo{display:flex;position:relative;width:190px;height:190px;margin:0 auto 18px;align-items:center;justify-content:center}
+.auth-card.loading .ld-logo img{position:relative;z-index:1;width:170px;height:170px;border-radius:50%;box-shadow:0 0 40px #0008;animation:ldpulse 1.8s ease-in-out infinite}
+.auth-card.loading .ld-logo::before{content:"";position:absolute;inset:-6px;border-radius:50%;background:conic-gradient(from 0deg,#f3d83d,#f3d83d66 40%,transparent 75%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));animation:ldspin 2.4s linear infinite}
+.auth-card.loading h2{display:block;color:#fff;font-size:30px;line-height:1.2;margin:8px 0 12px;font-weight:800;text-shadow:0 2px 6px #0009;font-family:var(--fh)}
+.auth-card.loading .ld-sub{display:block;color:#f8e830;font-weight:700;font-size:15px;margin-bottom:26px}
+.auth-card.loading .ld{display:block}
+.auth-card.loading .ld-pct{display:block;color:#fff;font-weight:700;font-size:14.5px;margin-top:16px}
+.auth-card.loading .ld-thanks{display:block;color:#ffffffa6;font-size:13.5px;margin-top:10px}
+@keyframes ldspin{to{transform:rotate(360deg)}}
+@keyframes ldpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+@media (max-width:860px){
+  .auth-overlay{grid-template-columns:1fr}.al-left{display:none}
+  .al-right{padding:16px}.auth-card:not(.loading){padding:30px 22px 22px}
+  .wl h3{font-size:26px}
+  .auth-card.loading .ld-logo{width:150px;height:150px}.auth-card.loading .ld-logo img{width:134px;height:134px}
+  .auth-card.loading h2{font-size:24px}
+}
+@media (prefers-reduced-motion:reduce){.ff,.auth-card.loading .ld-logo::before,.auth-card.loading .ld-logo img{animation:none}}
 </style>
 </head>
 <body>
@@ -244,12 +336,13 @@ tr.chg .cellin{border-color:var(--hi);box-shadow:inset 3px 0 0 var(--hi)}
     <div class="search">
       <div class="field">
         <svg class="ic" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        <input id="q" type="search" autocomplete="off" placeholder="Search a room code or class, e.g. SM.GF.14 or Y5 Mars" aria-label="Search rooms">
+        <input id="q" type="search" autocomplete="off" placeholder="Search room code or class" aria-label="Search rooms">
         <div id="results" role="listbox"></div>
       </div>
       <label class="allw"><input type="checkbox" id="allYears"> All years</label>
     </div>
     <div class="status" id="status" role="status"><i></i><span>Starting…</span></div>
+    <button type="button" class="icon-btn" data-theme-btn id="themeBtn" aria-label="Dark mode"><span class="ti">🌙</span></button>
     <div class="who" id="who" hidden><b id="whoName"></b><button class="btn sm" id="btnOut" type="button">Sign out</button></div>
   </header>
 
@@ -313,7 +406,41 @@ tr.chg .cellin{border-color:var(--hi);box-shadow:inset 3px 0 0 var(--hi)}
 <div class="fld"><label for="prMode">Labels</label><select id="prMode"><option value="both">Room code and class name</option><option value="name">Class name only</option><option value="code">Room code only</option></select></div>
 <div class="acts"><button class="btn" id="prCancel" type="button">Cancel</button><button class="btn primary" id="prGo" type="button">Print</button></div></div></div>
 <div id="printArea"></div>
-<div class="login" id="login" hidden><div class="lbox"><img class="logo" src="logo.png" alt="Yayasan Sultan Haji Hassanal Bolkiah"><h1>School map</h1><p>Yayasan Sultan Haji Hassanal Bolkiah</p><button class="btn primary" id="btnLogin" type="button">Sign in with Microsoft</button><div class="err" id="loginErr" style="margin:12px 0 0"></div></div></div>
+<div class="auth-overlay loading" id="login">
+  <div class="auth-prefs"><div class="lang-seg" role="group" aria-label="Language"><button type="button" data-lang="en" class="on">English</button><button type="button" data-lang="ms">Bahasa Melayu</button></div><button type="button" class="icon-btn" data-theme-btn aria-label="Dark mode"><span class="ti">🌙</span></button></div>
+  <section class="al-left" aria-hidden="true">
+    <img class="al-mark" src="logo.png" alt="">
+    <i class="ff f1"></i><i class="ff f2"></i><i class="ff f3"></i><i class="ff f4"></i><i class="ff f5"></i><i class="ff f6"></i>
+    <div class="al-brand"><img src="logo.png" alt=""><b>School Map</b></div>
+    <div class="al-dates">
+      <div class="al-d"><div class="al-big yel" id="alDay">--</div><b id="alMonth"></b><span id="alGregL" data-i18n="gregorian">Gregorian</span></div>
+      <div class="al-d al-sep"><div class="al-big" id="alHDay">--</div><b id="alHMonth"></b><span data-i18n="hijri">Hijri</span></div>
+    </div>
+    <div class="al-row"><div class="al-greet" id="alGreet"></div><div class="al-clock" id="alClock"></div></div>
+    <p class="al-note" data-i18n="note">Find any classroom by room code or class name, keep every year’s class names, and print the map.</p>
+  </section>
+  <div class="al-right">
+    <div class="auth-card loading" id="authCard">
+      <div class="ld-logo"><img src="logo.png" alt="Yayasan Sultan Haji Hassanal Bolkiah logo"></div>
+      <h2>School Map</h2>
+      <div class="wl">
+        <h3 data-i18n="welcome">Welcome</h3><div class="wl-sub" data-i18n="signin_to">Sign in to continue</div>
+        <p class="wl-desc" data-i18n="desc">Use your school email (@syayasan.edu.bn) to view the school maps and class names.</p>
+      </div>
+      <button class="btn primary ms-btn" id="btnLogin" type="button" hidden><span class="ms-logo"><i style="background:#f25022"></i><i style="background:#7fba00"></i><i style="background:#00a4ef"></i><i style="background:#ffb900"></i></span><span data-i18n="signin">Sign in with Microsoft</span></button>
+      <p id="authStatus" role="status"></p>
+      <div class="wl wl-tiles">
+        <div class="wl-tile"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span><b data-i18n="t1">Find rooms</b></div>
+        <div class="wl-tile"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><b data-i18n="t2">Classes by year</b></div>
+        <div class="wl-tile"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></span><b data-i18n="t3">Print maps</b></div>
+      </div>
+      <div class="wl wl-secure"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg><span data-i18n="secure">Secure sign-in with your school Microsoft account</span></div>
+      <div class="ld-sub">Yayasan Sultan Haji Hassanal Bolkiah</div>
+      <div class="ld" id="ldBox" aria-hidden="true"><div class="ld-bar"><i id="ldFill"></i></div><div class="ld-pct" id="ldPct"></div><div class="ld-thanks" data-i18n="thanks">Thank you for your patience.</div></div>
+      <button class="btn" id="retryBtn" type="button" hidden style="margin-top:12px" data-i18n="retry">Try again</button>
+    </div>
+  </div>
+</div>
 <div id="toast"></div>
 
 <script src="config.js"></script>
@@ -526,11 +653,24 @@ function renderPanel(){
 }
 
 /* ---------- sign-in, OneDrive storage, editing ---------- */
-const CONFIG=Object.assign({CLIENT_ID:'',TENANT:'organizations',OWNER:'it.helpdesk@syayasan.edu.bn',FOLDER:'SYSHHB-School-Map',ADMINS:[]},window.SCHOOLMAP_CONFIG||{});
+const CONFIG=Object.assign({CLIENT_ID:'',TENANT:'organizations',OWNER:'it.helpdesk@syayasan.edu.bn',FOLDER:'SYSHHB-School-Map',FOLDER_LINK:'',ADMINS:[]},window.SCHOOLMAP_CONFIG||{});
 const SCOPES=['User.Read','Files.ReadWrite.All'];
 const DEMO=!CONFIG.CLIENT_ID;
 const GRAPH='https://graph.microsoft.com/v1.0';
-const FILEP='/users/'+encodeURIComponent(CONFIG.OWNER)+'/drive/root:/'+CONFIG.FOLDER+'/';
+const FILEP='{F}';
+let baseCache=null;
+async function baseP(){
+  if(baseCache)return baseCache;
+  if(CONFIG.FOLDER_LINK){
+    const enc='u!'+btoa(unescape(encodeURIComponent(CONFIG.FOLDER_LINK))).replace(/=+$/,'').replace(/\//g,'_').replace(/\+/g,'-');
+    const t=await token();
+    const r=await fetch(GRAPH+'/shares/'+enc+'/driveItem?$select=id,parentReference',{headers:{Authorization:'Bearer '+t}});
+    if(r.status===403||r.status===404||r.status===401)throw new Error('you don’t have access to the OneDrive folder. Ask it.helpdesk to share it with you');
+    if(!r.ok)throw new Error('OneDrive error '+r.status);
+    const j=await r.json(); return baseCache='/drives/'+j.parentReference.driveId+'/items/'+j.id+':/';
+  }
+  return baseCache='/users/'+encodeURIComponent(CONFIG.OWNER)+'/drive/root:/'+CONFIG.FOLDER+'/';
+}
 let account=null, msalApp=null, etag=null, flushing=false, tmr=null, poll=null;
 const dirty=new Set(), pending={}, auditQ=[];
 const cleanNames=o=>{const r={};Object.keys(o||{}).forEach(k=>{if(o[k])r[k]=o[k]});return r};
@@ -538,7 +678,7 @@ async function token(){
   try{const r=await msalApp.acquireTokenSilent({scopes:SCOPES,account}); return r.accessToken}
   catch(e){msalApp.acquireTokenRedirect({scopes:SCOPES,account}); throw new Error('Signing in again…')}
 }
-async function graph(path,opt){opt=opt||{}; const t=await token(); return fetch(GRAPH+path,Object.assign({},opt,{headers:Object.assign({Authorization:'Bearer '+t},opt.headers||{})}))}
+async function graph(path,opt){opt=opt||{}; if(path.indexOf('{F}')===0)path=(await baseP())+path.slice(3); const t=await token(); return fetch(GRAPH+path,Object.assign({},opt,{headers:Object.assign({Authorization:'Bearer '+t},opt.headers||{})}))}
 function ingest(j){
   if(j&&j.years){Object.keys(j.years).forEach(y=>{years[y]=Object.assign({},(j.years[y]||{}).names||{})})}
   for(const y in pending){years[y]=years[y]||{}; for(const k in pending[y])years[y][k]=pending[y][k]}
@@ -560,6 +700,7 @@ async function persist(retry){
   const h={'Content-Type':'application/json'}; if(etag)h['If-Match']=etag;
   const r=await graph(FILEP+'years.json:/content',{method:'PUT',headers:h,body:JSON.stringify(payload)});
   if(r.status===412&&!retry){await pull(true); refreshViews(); return persist(true)}
+  if(r.status===403||r.status===401)throw new Error('no edit permission on the OneDrive folder. Ask it.helpdesk to give '+(account?account.username:'you')+' edit access');
   if(!r.ok)throw new Error('OneDrive error '+r.status);
   const meta=await r.json(); etag=meta.eTag||null;
 }
@@ -610,15 +751,65 @@ function paintStatus(extra){
 function refreshViews(){
   paintLabels(); applyState(); renderResults(); if(S.sel)renderPanel(); if(S.view==='rec'&&!document.activeElement.classList.contains('cellin'))renderTable();
 }
-function showLogin(msg){conn='signin'; $('login').hidden=false; $('loginErr').textContent=msg||''; paintStatus()}
+/* ---- sign-in / splash (follows the other SYSHHB systems) ---- */
+const L10N={
+ en:{gregorian:'Gregorian',hijri:'Hijri',note:'Find any classroom by room code or class name, keep every year’s class names, and print the map.',welcome:'Welcome',signin_to:'Sign in to continue',desc:'Use your school email (@syayasan.edu.bn) to view the school maps and class names.',signin:'Sign in with Microsoft',t1:'Find rooms',t2:'Classes by year',t3:'Print maps',secure:'Secure sign-in with your school Microsoft account',thanks:'Thank you for your patience.',retry:'Try again',loading:'Loading…',
+  s1:'Connecting securely',s2:'Checking your access',s3:'Loading records',s4:'Preparing the map',g1:'Good morning',g2:'Good afternoon',g3:'Good evening',g4:'Good night',dark:'Dark mode',light:'Light mode'},
+ ms:{gregorian:'Masihi',hijri:'Hijrah',note:'Cari mana-mana bilik mengikut kod atau nama kelas, simpan nama kelas setiap tahun, dan cetak peta.',welcome:'Selamat Datang',signin_to:'Log masuk untuk meneruskan',desc:'Gunakan e-mel sekolah (@syayasan.edu.bn) untuk melihat peta sekolah dan nama kelas.',signin:'Log masuk dengan Microsoft',t1:'Cari bilik',t2:'Kelas setiap tahun',t3:'Cetak peta',secure:'Log masuk selamat dengan akaun Microsoft sekolah anda',thanks:'Terima kasih atas kesabaran anda.',retry:'Cuba lagi',loading:'Memuatkan…',
+  s1:'Menyambung dengan selamat',s2:'Menyemak akses anda',s3:'Memuatkan rekod',s4:'Menyediakan peta',g1:'Selamat pagi',g2:'Selamat tengah hari',g3:'Selamat petang',g4:'Selamat malam',dark:'Mod gelap',light:'Mod cerah'}
+};
+let LANG='en'; try{LANG=localStorage.getItem('syshhb_lang')==='ms'?'ms':'en'}catch(e){}
+const T=k=>(L10N[LANG]&&L10N[LANG][k])||L10N.en[k]||k;
+function applyI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(e=>{e.textContent=T(e.dataset.i18n)});
+  document.querySelectorAll('[data-lang]').forEach(b=>b.classList.toggle('on',b.dataset.lang===LANG));
+  document.documentElement.lang=LANG==='ms'?'ms':'en'; clockTick(); setThemeBtns();
+}
+document.querySelectorAll('[data-lang]').forEach(b=>b.onclick=()=>{LANG=b.dataset.lang==='ms'?'ms':'en'; try{localStorage.setItem('syshhb_lang',LANG)}catch(e){} applyI18n(); if(ldN)ldStep(ldN)});
+/* theme */
+function currentTheme(){return document.documentElement.dataset.theme==='dark'?'dark':'light'}
+function setThemeBtns(){const t=currentTheme(); document.querySelectorAll('[data-theme-btn]').forEach(b=>{b.setAttribute('aria-pressed',t==='dark'); b.title=T(t==='dark'?'light':'dark'); b.setAttribute('aria-label',T(t==='dark'?'light':'dark')); const ic=b.querySelector('.ti'); if(ic)ic.textContent=t==='dark'?'☀️':'🌙'})}
+function setTheme(t){document.documentElement.dataset.theme=t; try{localStorage.setItem('syshhb_theme',t)}catch(e){} setThemeBtns()}
+document.querySelectorAll('[data-theme-btn]').forEach(b=>b.onclick=()=>setTheme(currentTheme()==='dark'?'light':'dark'));
+/* dates, greeting and clock on the sign-in page (Brunei time) */
+const TZ='Asia/Brunei', HM=['Muharram','Safar','Rabiulawal','Rabiulakhir','Jamadilawal','Jamadilakhir','Rejab','Syaaban','Ramadan','Syawal','Zulkaedah','Zulhijjah'];
+function hijriParts(d){try{const p=new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn',{day:'numeric',month:'numeric',year:'numeric',timeZone:TZ}).formatToParts(d),g=t=>((p.find(x=>x.type===t)||{}).value||'').replace(/\D/g,''); return [g('day'),(HM[Number(g('month'))-1]||'')+' '+g('year')+'H']}catch(e){return ['--','']}}
+let clockTimer=null;
+function clockTick(){
+  if(!$('alDay'))return; const d=new Date(), loc=LANG==='ms'?'ms-MY':'en-GB';
+  const dd=new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:TZ}).formatToParts(d), g=t=>(dd.find(x=>x.type===t)||{}).value||'';
+  const ml=new Intl.DateTimeFormat(loc,{month:'long',timeZone:TZ}).format(d);
+  $('alDay').textContent=g('day'); $('alMonth').textContent=ml.charAt(0).toUpperCase()+ml.slice(1)+' '+g('year');
+  const h=hijriParts(d); $('alHDay').textContent=h[0]; $('alHMonth').textContent=h[1];
+  const hr=Number(new Intl.DateTimeFormat('en-GB',{hour:'numeric',hour12:false,timeZone:TZ}).format(d))%24;
+  $('alGreet').textContent=T(hr<12?'g1':hr<15?'g2':hr<21?'g3':'g4');
+  $('alClock').textContent=new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:TZ}).format(d)+' BNT';
+}
+/* progress steps (shown as the splash on every refresh) */
+let ldN=0;
+function ldStep(n){
+  ldN=n; const ov=$('login'); ov.hidden=false; ov.style.display=''; ov.classList.remove('fade'); ov.classList.add('loading'); $('authCard').classList.add('loading');
+  const pct=Math.min(100,n>4?100:Math.round(n/4.4*100)); $('ldFill').style.width=pct+'%';
+  $('ldPct').textContent=(n>=1&&n<=4?T('s'+n)+' · ':'')+pct+'%';
+}
+function authMsg(t,isErr){const el=$('authStatus'); el.textContent=t||''; el.className=isErr?'err':''}
+function showLogin(msg,isErr){
+  conn='signin'; ldN=0; const ov=$('login'); ov.hidden=false; ov.style.display=''; ov.classList.remove('fade','loading'); $('authCard').classList.remove('loading');
+  authMsg(msg,isErr); $('btnLogin').hidden=!msalApp||!!isErr; $('retryBtn').hidden=!isErr; clockTick(); paintStatus();
+}
+function hideAuth(){
+  ldStep(5); const ov=$('login'); setTimeout(()=>{ov.classList.add('fade'); setTimeout(()=>{ov.style.display='none'; clearInterval(clockTimer)},470)},350);
+}
+$('retryBtn').onclick=()=>location.reload();
+applyI18n(); clockTimer=setInterval(clockTick,1000); ldStep(1);
 async function loadAll(){
   conn='loading'; paintStatus();
   try{
-    const j=await pull(true);
-    conn='ready'; $('login').hidden=true;
+    ldStep(3); const j=await pull(true);
+    conn='ready'; ldStep(4);
     if(!j&&canEdit){Object.keys(years).forEach(y=>{dirty.add(y);pending[y]=Object.assign({},years[y])}); schedule(300)}
-  }catch(err){conn='error'; paintStatus(err&&err.message); $('login').hidden=false; $('loginErr').textContent='Couldn’t open the records: '+(err&&err.message||'unknown error'); return}
-  renderYears(); paintTitle(); paintStatus(); refreshViews(); renderPanel(); $('btnLog').hidden=!canEdit;
+  }catch(err){conn='error'; paintStatus(err&&err.message); showLogin('Couldn’t open the records: '+(err&&err.message||'unknown error'),true); return}
+  renderYears(); paintTitle(); paintStatus(); refreshViews(); renderPanel(); $('btnLog').hidden=!canEdit; hideAuth();
   clearInterval(poll); poll=setInterval(async()=>{
     if(DEMO||dirty.size||flushing||document.visibilityState!=='visible')return;
     try{const r=await pull(false); if(r!==false){renderYears();refreshViews()}}catch(e){}
@@ -627,21 +818,20 @@ async function loadAll(){
 async function initDb(){
   if(DEMO){canEdit=true; $('who').hidden=true; await loadAll(); return}
   if(!window.msal){
-    $('loginErr').textContent='Loading Microsoft sign-in…'; $('login').hidden=false;
+    ldStep(1);
     const srcs=['msal-browser.min.js','https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js','https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js','https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js'];
     for(const u of srcs){
       if(window.msal)break;
       await new Promise(res=>{const el=document.createElement('script'); el.src=u; el.onload=res; el.onerror=res; document.head.appendChild(el); setTimeout(res,8000)});
     }
-    $('loginErr').textContent='';
   }
-  if(!window.msal){showLogin('Couldn’t load the Microsoft sign-in library. The school network may block it. Download msal-browser.min.js into the same folder as index.html (see README) and reload.'); return}
+  if(!window.msal){showLogin('Couldn’t load the Microsoft sign-in library. The school network may block it. Download msal-browser.min.js into the same folder as index.html (see README) and reload.',true); return}
   msalApp=new msal.PublicClientApplication({auth:{clientId:CONFIG.CLIENT_ID,authority:'https://login.microsoftonline.com/'+CONFIG.TENANT,redirectUri:location.origin+location.pathname,navigateToLoginRequestUrl:false},cache:{cacheLocation:'localStorage'}});
   await msalApp.initialize();
-  let r=null; try{r=await msalApp.handleRedirectPromise()}catch(e){showLogin('Sign-in failed: '+(e.errorMessage||e.message)); return}
+  let r=null; try{r=await msalApp.handleRedirectPromise()}catch(e){showLogin('Sign-in failed: '+(e.errorMessage||e.message),true); return}
   account=(r&&r.account)||msalApp.getAllAccounts()[0]||null;
   if(!account){showLogin(''); return}
-  msalApp.setActiveAccount(account);
+  ldStep(2); msalApp.setActiveAccount(account);
   canEdit=CONFIG.ADMINS.map(x=>x.toLowerCase()).includes((account.username||'').toLowerCase());
   $('who').hidden=false; $('whoName').textContent=(account.name||account.username)+(canEdit?' · Editor':' · Viewer');
   await loadAll();
