@@ -34,3 +34,18 @@ The loading screen (shown on every refresh), the split-screen sign-in with Grego
 
 ## App name and splash
 The installed app is called "SYSHHB Map". Its opening (splash) screen is solid green, the same colour as the loading page, and the status bar matches it. After changing the name or icon, uninstall the old app from the phone and install it again; Android keeps the old name and icon until then.
+
+## 3D view
+Tap or click **3D** (top-left of the map) to see the same layout as a 3D building: ground, first and second floors stacked, the courtyard in the middle. Drag to rotate, scroll or pinch to zoom, Shift+drag (two fingers on a phone) to move, double-click a room to zoom to it, and use **Explode** to pull the floors apart. Search, floor filters, the class-name labels and the year all work in 3D too.
+
+## Roles: Admin, Editor, Viewer
+- **Admin**: edits class names, adds and removes users, changes roles, reads the audit log.
+- **Editor**: edits class names, creates years, imports CSV.
+- **Viewer**: looks, searches and prints only.
+
+Users are managed inside the app: sign in as an Admin, open **Admin → Users**, type the school email, pick a role and click Add user. The list is saved as `access.json` in the OneDrive folder.
+- The accounts in `ADMINS` in `config.js` are **Owners**: always Admin, and they cannot be removed from inside the app, so you can never lock yourself out.
+- `DEFAULT_ROLE` in `config.js` is the role for anyone who signs in but is not on the list: `"viewer"` (default) or `"none"` (blocked until an Admin adds them).
+- Share the OneDrive folder too: Admin and Editor need **Can edit**, Viewer needs **Can view**. The app roles control what each person can do in the app; the folder sharing controls what OneDrive allows.
+
+**Admin → Audit log** shows who did what and when (Brunei time): renamed rooms, new years, CSV imports, users added, removed or changed, and editor and admin sign-ins. Filter by person or action, and export it as CSV. It is stored as `audit.json` in the same folder (latest 5000 entries).
