@@ -8,6 +8,9 @@ window.SCHOOLMAP_CONFIG = {
   // The OneDrive that holds the records (data is saved here, not in the admin's own OneDrive).
   OWNER: "it.helpdesk@syayasan.edu.bn",
   FOLDER: "SYSHHB-School-Map",
+  // Paste the OneDrive link of the SYSHHB-School-Map folder here (see README step 3).
+  // This is what lets zulfa.zaini save into it.helpdesk's OneDrive.
+  FOLDER_LINK: "",
   // People who may edit class names. Everyone else signed in can only view.
   ADMINS: [
     "zulfa.zaini@syayasan.edu.bn"
