@@ -11,7 +11,10 @@ window.SCHOOLMAP_CONFIG = {
   // Paste the OneDrive link of the SYSHHB-School-Map folder here (see README step 3).
   // This is what lets zulfa.zaini save into it.helpdesk's OneDrive.
   FOLDER_LINK: "",
-  // People who may edit class names. Everyone else signed in can only view.
+  // Role for anyone who signs in but is not on the access list: "viewer" or "none" (no access).
+  DEFAULT_ROLE: "viewer",
+  // Owners: always Admin, cannot be removed from inside the app (this is your safety net).
+  // Admins add and remove other Admins, Editors and Viewers from the Admin page in the app.
   ADMINS: [
     "zulfa.zaini@syayasan.edu.bn"
   ]
