@@ -319,6 +319,53 @@ select#year option{color:#132a22;background:#fff}
   .auth-card.loading h2{font-size:24px}
 }
 @media (prefers-reduced-motion:reduce){.ff,.auth-card.loading .ld-logo::before,.auth-card.loading .ld-logo img{animation:none}}
+
+/* ===== interactive: tooltip, hover, bottom nav, bottom sheet ===== */
+#tip{position:fixed;z-index:70;pointer-events:none;background:#0b2a1a;color:#fff;border:1px solid #2c4034;border-radius:9px;padding:7px 11px;font-size:12.5px;box-shadow:0 8px 24px #0006;display:flex;flex-direction:column;gap:1px;max-width:260px}
+#tip[hidden]{display:none}
+#tip b{color:#f6ee3a;font-size:13px}#tip .dimt{color:#9fbaa9}#tip small{color:#9fbaa9;font-size:11px}
+kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--line2);border-bottom-width:2px;border-radius:6px;background:var(--surface2);font:600 11.5px/1.5 var(--fb);text-align:center;color:var(--ink)}
+.hint kbd{min-width:0;padding:0 5px}
+table.kb{width:100%;font-size:13.5px;border-collapse:collapse}table.kb td{padding:6px 4px;border-bottom:1px solid var(--line)}table.kb td:first-child{white-space:nowrap;width:1%;padding-right:14px}
+.room:hover .hit{fill:#ffffff40}.room.dim:hover .hit{fill:transparent}
+.room.sel .ring{animation:selring 1.6s ease-in-out infinite}
+@keyframes selring{0%,100%{stroke-width:2.4}50%{stroke-width:3.6}}
+#map.fadein{animation:mapin .28s ease}
+@keyframes mapin{from{opacity:.2}to{opacity:1}}
+.btn{transition:background .15s,transform .1s}.btn:active{transform:scale(.97)}
+.chip,.tab,.seg button{transition:background .15s,opacity .15s}
+.prow .btn{flex:1;justify-content:center}
+.grab{display:none}
+#bnav{display:none}
+html,body{overscroll-behavior:none}
+@supports (height:100dvh){#app{height:100dvh}}
+@media (pointer:coarse){.btn,.chip,.seg button,.tab{min-height:42px}.zoomctl button{width:46px;height:46px}}
+@media (max-width:860px){
+  .tabs,#viewSeg{display:none}
+  #bnav{display:flex;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(4px);gap:2px;flex:none}
+  #bnav button{flex:1;min-width:0;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border-radius:12px;color:var(--muted);font-size:11px;font-weight:600}
+  #bnav button svg{width:22px;height:22px}
+  #bnav button.on{color:var(--brand);background:var(--brand-soft)}
+  :root[data-theme=dark] #bnav button.on{color:#63d9a3}
+  main{padding-bottom:8px}
+  .zoomctl{top:10px;bottom:auto;right:10px}
+  #panel{bottom:calc(8px + 64px + env(safe-area-inset-bottom,0px));max-height:62vh;padding-top:6px;transition:max-height .22s ease}
+  #panel.min{max-height:226px;overflow:hidden}
+  .grab{display:flex;justify-content:center;align-items:center;height:22px;margin:-2px 0 4px;touch-action:none;cursor:grab}
+  .grab::before{content:"";width:44px;height:5px;border-radius:3px;background:var(--line2)}
+  table th:nth-child(2),table td:nth-child(2),table th:nth-child(3),table td:nth-child(3){display:none}
+  .search input[type=search]{height:42px;font-size:16px}
+  #pName,.cellin{font-size:16px}
+  #tip{display:none!important}
+}
+@media (prefers-reduced-motion:reduce){.room.sel .ring,#map.fadein{animation:none}}
+
+@media (max-width:860px){
+  .top{padding:8px 10px;gap:6px 10px}.logo{width:36px;height:36px}.brand h1{font-size:16px;white-space:nowrap}
+  .top .btn,select#year,.icon-btn{height:36px}
+  .status{font-size:11px}
+  .bar{padding:6px 10px}.seg button,.chip{height:34px;min-height:34px}
+}
 </style>
 </head>
 <body>
@@ -370,7 +417,7 @@ select#year option{color:#132a22;background:#fff}
         <button type="button" id="zout" aria-label="Zoom out">−</button>
         <button type="button" id="zfit" aria-label="Fit map" style="font-size:13px">Fit</button>
       </div>
-      <div class="hint">Scroll to zoom, drag to move, click a room to open it</div>
+      <div class="hint">Scroll to zoom · drag to move · double-click a room · press <kbd>?</kbd> for shortcuts</div>
     </section>
     <section id="recView" hidden>
       <div class="recWrap">
@@ -388,6 +435,7 @@ select#year option{color:#132a22;background:#fff}
     </section>
     <aside id="panel" aria-live="polite"></aside>
   </main>
+  <nav id="bnav" aria-label="Maps"></nav>
 </div>
 
 <div class="scrim" id="scrim">
@@ -441,6 +489,10 @@ select#year option{color:#132a22;background:#fff}
     </div>
   </div>
 </div>
+<div class="scrim" id="helpScrim"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="hlT"><h2 id="hlT">Shortcuts</h2><p>Quick ways to move around the map.</p>
+<table class="kb"><tr><td><kbd>/</kbd></td><td>Search</td></tr><tr><td><kbd>+</kbd> <kbd>-</kbd></td><td>Zoom in and out</td></tr><tr><td><kbd>0</kbd></td><td>Fit the whole map</td></tr><tr><td><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd></td><td>Move the map (hold Shift for bigger steps)</td></tr><tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>Previous or next map</td></tr><tr><td><kbd>n</kbd> <kbd>p</kbd></td><td>Next or previous room</td></tr><tr><td><kbd>Esc</kbd></td><td>Close the room panel</td></tr></table>
+<p style="margin:12px 0 0">Double-click (or double-tap) a room to zoom to it. Pinch on a phone to zoom.</p><div class="acts" style="margin-top:14px"><button class="btn primary" id="helpClose" type="button">Got it</button></div></div></div>
+<div id="tip" hidden></div>
 <div id="toast"></div>
 
 <script src="config.js"></script>
@@ -547,7 +599,7 @@ function buildMap(){
     rg.appendChild(g); roomEls[c.k]=g;
   });
   paintTitle(); paintLabels(); applyState();
-  vb={x:20,y:6,w:920,h:518}; fitAspect(); setVB();
+  vb={x:20,y:6,w:920,h:518}; fitAspect(); setVB(); svg.classList.remove('fadein'); void svg.offsetWidth; svg.classList.add('fadein');
 }
 function paintTitle(){const t=$('ttlText'); if(t)t.textContent=TITLES(S.year)[S.page]}
 function paintLabels(){
@@ -593,53 +645,87 @@ function animateVB(t){
 function zoomToCell(c){
   const r=svg.getBoundingClientRect(); const a=r.height/r.width;
   const tw=Math.max(300,c.w*2.4,c.h*2.4/a); const th=tw*a;
-  const mob=innerWidth<=860; animateVB({x:c.x+c.w/2-tw/2,y:c.y+c.h/2-th/2+(mob?th*0.22:0),w:tw,h:th});
+  const mob=innerWidth<=860; animateVB({x:c.x+c.w/2-tw/2,y:c.y+c.h/2-th/2+(mob?th*0.2:0),w:tw,h:th});
+}
+function zoomStep(f){const c=[vb.x+vb.w/2,vb.y+vb.h/2]; zoomAnim(f,c[0],c[1])}
+function zoomAnim(f,cx,cy){animateVB({x:cx-(cx-vb.x)*f,y:cy-(cy-vb.y)*f,w:vb.w*f,h:vb.h*f})}
+const tip=$('tip');
+function hideTip(){tip.hidden=true}
+function showTip(g,e){
+  const c=byKey[g.getAttribute('data-k')]; if(!c)return; const nm=nameOf(S.year,c.k); const fl=floorLabel(c.floor);
+  tip.innerHTML=''; const b=document.createElement('b'); b.textContent=c.code||NOCODE[c.k]||'Room'; tip.appendChild(b);
+  const n=document.createElement('span'); n.textContent=nm||'No class assigned'; if(!nm)n.className='dimt'; tip.appendChild(n);
+  if(fl){const f=document.createElement('small'); f.textContent=fl; tip.appendChild(f)}
+  tip.hidden=false; const w=tip.offsetWidth,h=tip.offsetHeight;
+  let x=e.clientX+14,y=e.clientY+16; if(x+w>innerWidth-8)x=e.clientX-w-12; if(y+h>innerHeight-8)y=e.clientY-h-12; tip.style.left=x+'px'; tip.style.top=y+'px';
 }
 (function pointer(){
-  const ptrs=new Map(); let moved=false, start=null, pinch=null;
-  svg.addEventListener('pointerdown',e=>{ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); moved=false; start={x:e.clientX,y:e.clientY,vbx:vb.x,vby:vb.y,t:e.target};
+  const ptrs=new Map(); let moved=false, start=null, pinch=null, lastTap={t:0,x:0,y:0};
+  svg.addEventListener('pointerdown',e=>{hideTip(); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); moved=false; start={x:e.clientX,y:e.clientY,vbx:vb.x,vby:vb.y,t:e.target};
     if(ptrs.size===2){const [a,b]=[...ptrs.values()]; pinch={d:Math.hypot(a.x-b.x,a.y-b.y),w:vb.w}}});
   svg.addEventListener('pointermove',e=>{
-    if(!ptrs.has(e.pointerId))return; ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(!ptrs.has(e.pointerId)){
+      if(e.pointerType==='mouse'){const g=e.target.closest&&e.target.closest('.room'); if(g)showTip(g,e); else hideTip()}
+      return}
+    ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(ptrs.size===2&&pinch){const [a,b]=[...ptrs.values()]; const d=Math.hypot(a.x-b.x,a.y-b.y); const [cx,cy]=toSvg((a.x+b.x)/2,(a.y+b.y)/2);
       const target=pinch.w*pinch.d/d; zoomAt(target/vb.w,cx,cy); moved=true; return}
     if(ptrs.size===1&&start){const dx=e.clientX-start.x, dy=e.clientY-start.y;
-      if(!moved&&Math.hypot(dx,dy)<5)return; moved=true; svg.classList.add('drag');
+      if(!moved&&Math.hypot(dx,dy)<5)return; moved=true; hideTip(); svg.classList.add('drag');
       const r=svg.getBoundingClientRect(); const sc=Math.min(r.width/vb.w,r.height/vb.h);
       vb.x=start.vbx-dx/sc; vb.y=start.vby-dy/sc; clampVB(); setVB()}});
+  svg.addEventListener('pointerleave',hideTip);
   const end=e=>{
     const was=ptrs.has(e.pointerId); ptrs.delete(e.pointerId); if(ptrs.size<2)pinch=null; svg.classList.remove('drag');
-    if(was&&!moved&&ptrs.size===0&&e.type==='pointerup'){const g=(e.target.closest&&e.target.closest('.room')); if(g)select(g.getAttribute('data-k'),innerWidth<=860); else if(S.sel){select(null)}}
+    if(was&&!moved&&ptrs.size===0&&e.type==='pointerup'){
+      const g=(e.target.closest&&e.target.closest('.room')); const now=performance.now();
+      const dbl=now-lastTap.t<320&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<28; lastTap={t:now,x:e.clientX,y:e.clientY};
+      if(dbl){lastTap.t=0; if(g)select(g.getAttribute('data-k'),true); else{const [cx,cy]=toSvg(e.clientX,e.clientY); zoomAnim(0.5,cx,cy)}}
+      else if(g)select(g.getAttribute('data-k'),innerWidth<=860);
+      else if(S.sel)select(null)}
     if(ptrs.size===0)start=null;
   };
   svg.addEventListener('pointerup',end); svg.addEventListener('pointercancel',end);
-  svg.addEventListener('wheel',e=>{e.preventDefault(); const [cx,cy]=toSvg(e.clientX,e.clientY); zoomAt(Math.exp(e.deltaY*0.0016),cx,cy)},{passive:false});
+  svg.addEventListener('wheel',e=>{e.preventDefault(); hideTip(); const [cx,cy]=toSvg(e.clientX,e.clientY); zoomAt(Math.exp(e.deltaY*(e.ctrlKey?0.01:0.0016)),cx,cy)},{passive:false});
   svg.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('room')){e.preventDefault(); select(e.target.getAttribute('data-k'),false)}});
-  $('zin').onclick=()=>{const c=[vb.x+vb.w/2,vb.y+vb.h/2]; zoomAt(0.7,c[0],c[1])};
-  $('zout').onclick=()=>{const c=[vb.x+vb.w/2,vb.y+vb.h/2]; zoomAt(1.4,c[0],c[1])};
+  $('zin').onclick=()=>zoomStep(0.7);
+  $('zout').onclick=()=>zoomStep(1.4);
   $('zfit').onclick=fit;
+})();
+function pageList(){return CELLS.filter(c=>c.p===S.page).sort((a,b)=>(a.code||'zzz'+a.k).localeCompare(b.code||'zzz'+b.k,undefined,{numeric:true}))}
+function stepRoom(d){const l=pageList(); if(!l.length)return; let i=l.findIndex(c=>c.k===S.sel); i=i<0?(d>0?0:l.length-1):(i+d+l.length)%l.length; select(l[i].k,true)}
+/* phone bottom sheet: tap or swipe the handle */
+(function sheet(){
+  const p=$('panel'); let y0=null, moved=false;
+  p.addEventListener('pointerdown',e=>{const g=e.target.closest('.grab'); if(!g||innerWidth>860)return; y0=e.clientY; moved=false; try{g.setPointerCapture(e.pointerId)}catch(x){}});
+  p.addEventListener('pointermove',e=>{if(y0!=null&&Math.abs(e.clientY-y0)>6)moved=true});
+  p.addEventListener('pointerup',e=>{if(y0==null)return; const dy=e.clientY-y0; y0=null;
+    if(!moved||Math.abs(dy)<18){p.classList.toggle('min'); return}
+    if(dy<0)p.classList.remove('min'); else if(!p.classList.contains('min'))p.classList.add('min'); else select(null)});
+  p.addEventListener('focusin',e=>{if(innerWidth<=860&&e.target.id==='pName')p.classList.remove('min')});
 })();
 
 /* ---------- selection & panel ---------- */
 function select(k,zoom){
   S.sel=k; if(k){const c=byKey[k]; if(c.p!==S.page){gotoPage(c.p,true)} if(zoom)zoomToCell(c)}
   applyState(); renderPanel();
-  const p=$('panel'); p.classList.toggle('show',!!k);
+  const p=$('panel'); const was=p.classList.contains('show'); p.classList.toggle('show',!!k); if(k&&!was)p.classList.add('min');
+  if(k&&innerWidth<=860){try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}}
 }
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function renderPanel(){
   const p=$('panel'); const c=S.sel?byKey[S.sel]:null;
   if(!c){
-    p.innerHTML='<div class="empty"><h2>Pick a room</h2><p>Click any room on the map, or search above, to see its code and edit the class name for '+S.year+'.</p><ul><li>Search works on room codes and class names</li><li>Switch the year to see how classes moved</li><li>Use Records to rename many rooms at once</li></ul></div>';
+    p.innerHTML='<div class="grab" aria-hidden="true"></div><div class="empty"><h2>Pick a room</h2><p>Click any room on the map, or search above, to see its code and edit the class name for '+S.year+'.</p><ul><li>Search works on room codes and class names</li><li>Switch the year to see how classes moved</li><li>Use Records to rename many rooms at once</li></ul></div>';
     return;
   }
   const fl=FLOORS.find(f=>f[0]===c.floor);
   const nm=nameOf(S.year,c.k);
-  let h='<div class="p-code'+(c.code?'':' none')+'">'+esc(c.code||NOCODE[c.k]||'Room')+'</div><div class="p-meta">';
+  let h='<div class="grab" aria-hidden="true"></div><div class="p-code'+(c.code?'':' none')+'">'+esc(c.code||NOCODE[c.k]||'Room')+'</div><div class="p-meta">';
   if(fl)h+='<span class="tag"><i style="background:'+fl[2]+'"></i>'+fl[1]+'</span>';
   h+='<span class="tag">'+esc(BLD[c.p])+(c.area?' · '+c.area:'')+'</span></div>';
   h+='<label class="fl" for="pName">Class name in '+S.year+'</label><input id="pName" maxlength="60" value="'+esc(nm)+'" placeholder="No class assigned"'+(canEdit?'':' readonly')+'>';
-  h+='<div class="prow"><button class="btn primary" id="pSave" type="button"'+(canEdit?'':' disabled')+'>Save name</button><button class="btn" id="pZoom" type="button">Zoom to room</button></div>';
+  h+='<div class="prow"><button class="btn primary" id="pSave" type="button"'+(canEdit?'':' disabled')+'>Save name</button><button class="btn" id="pSaveNext" type="button"'+(canEdit?'':' disabled')+'>Save &amp; next ›</button></div><div class="prow"><button class="btn" id="pPrev" type="button" aria-label="Previous room">‹ Prev</button><button class="btn" id="pZoom" type="button">Zoom</button><button class="btn" id="pNext" type="button" aria-label="Next room">Next ›</button></div>';
   if(!canEdit)h+='<p class="p-note">'+(conn==='ready'?'You have view-only access, so names can’t be changed here.':'Names can’t be changed until live records are connected.')+'</p>';
   h+='<h3>Name by year</h3><ul class="hist">';
   yearList().forEach(y=>{const n=nameOf(y,c.k); h+='<li class="'+(y===S.year?'cur':'')+'"><b>'+y+'</b><span class="nm'+(n?'':' blank')+'">'+(n?esc(n):'No class')+'</span>'+(y!==S.year?'<button type="button" data-y="'+y+'">View</button>':'')+'</li>'});
@@ -647,7 +733,7 @@ function renderPanel(){
   p.innerHTML=h;
   const inp=$('pName');
   const save=()=>{if(!canEdit)return; setName(S.year,c.k,inp.value); inp.value=nameOf(S.year,c.k); toast('Saved '+(c.code||NOCODE[c.k])+' · '+S.year)};
-  $('pSave').onclick=save; inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();save()}};
+  $('pSave').onclick=save; $('pSaveNext').onclick=()=>{save(); stepRoom(1)}; $('pPrev').onclick=()=>stepRoom(-1); $('pNext').onclick=()=>stepRoom(1); inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();save()}};
   $('pZoom').onclick=()=>{if(S.view!=='map')setView('map'); zoomToCell(c)};
   p.querySelectorAll('.hist button').forEach(b=>b.onclick=()=>{setYear(+b.dataset.y)});
 }
@@ -747,6 +833,7 @@ function paintStatus(extra){
   else if(saveState==='saved'){cls='ok';txt='All changes saved to OneDrive'}
   else{cls='ok';txt='Connected to OneDrive'}
   s.className='status '+cls; s.lastElementChild.textContent=txt;
+  s.hidden=(cls==='ok'||txt==='View only'||txt.indexOf('Saving')===0);
 }
 function refreshViews(){
   paintLabels(); applyState(); renderResults(); if(S.sel)renderPanel(); if(S.view==='rec'&&!document.activeElement.classList.contains('cellin'))renderTable();
@@ -902,11 +989,12 @@ function renderTabs(){
   TABS.forEach((n,i)=>{const b=document.createElement('button'); b.type='button'; b.className='tab'; b.setAttribute('role','tab'); b.setAttribute('aria-selected',i===S.page);
     b.innerHTML='<span>'+esc(n)+'</span><span class="bd"></span>'; b.onclick=()=>gotoPage(i,false); t.appendChild(b)});
 }
+function syncBnav(){document.querySelectorAll('#bnav button').forEach(b=>{const on=b.dataset.v==='rec'?S.view==='rec':(S.view==='map'&&+b.dataset.p===S.page); b.classList.toggle('on',on); b.setAttribute('aria-current',on?'page':'false')})}
 function gotoPage(i,keepSel){
   S.page=i; persistUI(); if(S.view!=='map')setView('map');
   document.querySelectorAll('.tab').forEach((b,j)=>b.setAttribute('aria-selected',j===i));
   if(!keepSel&&S.sel&&byKey[S.sel].p!==i)S.sel=null;
-  buildMap(); renderFloors(); renderPanel(); $('panel').classList.toggle('show',!!S.sel&&innerWidth<=860);
+  buildMap(); renderFloors(); renderPanel(); $('panel').classList.toggle('show',!!S.sel&&innerWidth<=860); syncBnav();
 }
 function renderFloors(){
   const f=$('floors'); f.innerHTML='';
@@ -920,7 +1008,7 @@ function setView(v){
   S.view=v; $('mapView').hidden=v!=='map'; $('recView').hidden=v!=='rec';
   document.querySelectorAll('#viewSeg button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===v));
   $('modeSeg').hidden=$('floors').hidden=$('tabs').hidden=v!=='map'; document.querySelector('main').classList.toggle('rec',v==='rec'); $('panel').style.display=v==='rec'?'none':'';
-  if(v==='map'){paintLabels()} else renderTable();
+  if(v==='map'){paintLabels()} else renderTable(); syncBnav();
 }
 document.querySelectorAll('#viewSeg button').forEach(b=>b.onclick=()=>setView(b.dataset.v));
 
@@ -960,7 +1048,31 @@ qEl.addEventListener('keydown',e=>{
   else if(e.key==='Escape'){qEl.value=''; renderResults(); qEl.blur()}
 });
 document.addEventListener('click',e=>{if(!e.target.closest('.search'))$('results').classList.remove('open')});
-document.addEventListener('keydown',e=>{if(e.key==='/'&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){e.preventDefault();qEl.focus()}});
+document.addEventListener('keydown',e=>{
+  const typing=/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+  if(e.key==='Escape'){['helpScrim','scrim','logScrim','prScrim'].forEach(id=>$(id).classList.remove('open'))}
+  if(typing||e.ctrlKey||e.metaKey||e.altKey)return;
+  if(e.key==='/'){e.preventDefault();qEl.focus();return}
+  if(e.key==='?'){$('helpScrim').classList.add('open');return}
+  if(S.view!=='map')return;
+  const step=e.shiftKey?0.3:0.12;
+  switch(e.key){
+    case '0':fit();break;
+    case '+':case '=':zoomStep(0.7);break;
+    case '-':case '_':zoomStep(1.4);break;
+    case 'Escape':if(S.sel)select(null);break;
+    case '[':gotoPage((S.page+3)%4);break;
+    case ']':gotoPage((S.page+1)%4);break;
+    case 'n':case 'N':stepRoom(1);break;
+    case 'p':case 'P':stepRoom(-1);break;
+    case 'ArrowLeft':vb.x-=vb.w*step;clampVB();setVB();e.preventDefault();break;
+    case 'ArrowRight':vb.x+=vb.w*step;clampVB();setVB();e.preventDefault();break;
+    case 'ArrowUp':vb.y-=vb.h*step;clampVB();setVB();e.preventDefault();break;
+    case 'ArrowDown':vb.y+=vb.h*step;clampVB();setVB();e.preventDefault();break;
+  }
+});
+$('helpClose').onclick=()=>$('helpScrim').classList.remove('open');
+$('helpScrim').addEventListener('click',e=>{if(e.target===$('helpScrim'))$('helpScrim').classList.remove('open')});
 
 /* ---------- records table ---------- */
 function renderTable(){
@@ -1017,10 +1129,17 @@ let tt=null; function toast(m){const t=$('toast'); t.textContent=m; t.classList.
 
 /* ---------- start ---------- */
 if(!years[S.year])S.year=yearList()[0];
-renderTabs(); renderYears(); 
+renderTabs();
+(function(){const nav=$('bnav'); const ic={0:'<path d="M3 21V8l9-5 9 5v13M9 21v-6h6v6"/>',1:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h6"/>',2:'<path d="M3 21h18M5 21V9l7-5 7 5v12M10 21v-5h4v5"/>',3:'<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/>',r:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>'};
+  const items=TABS.map((n,i)=>({p:i,l:n==='Admin & canteen'?'Admin':n,i:ic[i]})).concat([{v:'rec',l:'Records',i:ic.r}]);
+  items.forEach(it=>{const b=document.createElement('button'); b.type='button'; if(it.v)b.dataset.v='rec'; else b.dataset.p=it.p;
+    b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+it.i+'</svg><span>'+it.l+'</span>';
+    b.onclick=()=>{if(it.v)setView('rec'); else gotoPage(it.p,false)}; nav.appendChild(b)});
+})();
+renderYears(); 
 document.querySelectorAll('#modeSeg button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.m===S.mode));
 if(S.page<0||S.page>3)S.page=0;
-buildMap(); renderFloors(); renderPanel(); paintStatus();
+buildMap(); renderFloors(); renderPanel(); paintStatus(); syncBnav();
 document.querySelectorAll('.tab').forEach((b,j)=>b.setAttribute('aria-selected',j===S.page));
 window.addEventListener('resize',()=>{clampVB();setVB()});
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{paintLabels()});
