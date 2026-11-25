@@ -1057,14 +1057,42 @@ function applyRole(r){
   $('segAdm').hidden=!isAdmin; const nb=document.querySelector('#bnav [data-v=adm]'); if(nb)nb.hidden=!isAdmin; $('btnLog').hidden=!isAdmin;
   if(!isAdmin&&S.view==='adm')setView('map');
 }
-function logEvent(k,extra){auditQ.push(Object.assign({t:new Date().toISOString(),by:account?account.username:'demo',r:role,k},extra||{})); schedule(500)}
+function logEvent(k,extra){auditQ.push(Object.assign({t:new Date().toISOString(),by:account?account.username:'demo',n:account?(account.name||''):'Demo',r:role,k},extra||{})); schedule(500)}
+/* ---- sign-in records: every sign-in is saved to signins/signins.json ---- */
+const SIGNIN_P='signins/signins.json';
+async function readSignins(){
+  if(DEMO){try{return JSON.parse(localStorage.getItem('ysm-signins')||'[]')}catch(e){return []}}
+  const r=await graph(FILEP+SIGNIN_P+':/content'); if(r.status===404)return []; if(!r.ok)throw new Error('OneDrive error '+r.status); return r.json();
+}
+async function logSignIn(){
+  if(!account&&!DEMO)return;
+  const who=DEMO?'demo':lc(account.username);
+  try{if(sessionStorage.getItem('ysm-si')===who)return}catch(e){}
+  const entry={t:new Date().toISOString(),by:DEMO?'demo':account.username,n:DEMO?'Demo':(account.name||''),r:role,k:'login',d:(/Mobi|Android|iPhone/i.test(navigator.userAgent)||innerWidth<=860)?'Mobile':'Desktop'};
+  try{
+    if(DEMO){const a=await readSignins(); a.push(entry); localStorage.setItem('ysm-signins',JSON.stringify(a.slice(-5000)))}
+    else{
+      for(let i=0;i<4;i++){
+        const m=await graph(FILEP+SIGNIN_P); let arr=[], et=null;
+        if(m.status===404){arr=[]}
+        else if(m.ok){const meta=await m.json(); et=meta.eTag||null; const c=await graph(FILEP+SIGNIN_P+':/content'); if(c.ok){try{arr=await c.json()}catch(e){arr=[]}}}
+        else return;
+        arr.push(entry); arr=arr.slice(-5000);
+        const h={'Content-Type':'application/json'}; if(et)h['If-Match']=et;
+        const r=await graph(FILEP+SIGNIN_P+':/content',{method:'PUT',headers:h,body:JSON.stringify(arr)});
+        if(r.status===412)continue; if(!r.ok)return; break;
+      }
+    }
+    try{sessionStorage.setItem('ysm-si',who)}catch(e){}
+  }catch(e){}
+}
 function setName(y,k,val){
   k=ALIAS[k]||k;
   val=String(val||'').replace(/\s+/g,' ').trim().slice(0,60);
   if(!years[y])years[y]={};
   const old=years[y][k]||''; if(old===val)return false;
   years[y][k]=val; (pending[y]=pending[y]||{})[k]=val; dirty.add(String(y));
-  const c=byKey[k]; auditQ.push({t:new Date().toISOString(),by:account?account.username:'demo',r:role,k:'rename',y:Number(y),c:(c&&c.code)||k,a:old,b:val});
+  const c=byKey[k]; auditQ.push({t:new Date().toISOString(),by:account?account.username:'demo',n:account?(account.name||''):'Demo',r:role,k:'rename',y:Number(y),c:(c&&c.code)||k,a:old,b:val});
   schedule(600); refreshViews(); return true;
 }
 function schedule(ms){clearTimeout(tmr); tmr=setTimeout(flush,ms)}
@@ -1162,7 +1190,7 @@ async function loadAll(){
   },60000);
 }
 async function initDb(){
-  if(DEMO){await loadAccess(); applyRole('admin'); $('who').hidden=true; await loadAll(); return}
+  if(DEMO){await loadAccess(); applyRole('admin'); $('who').hidden=true; await loadAll(); logSignIn(); return}
   if(!window.msal){
     ldStep(1);
     const srcs=['msal-browser.min.js','https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js','https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js','https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js'];
@@ -1186,7 +1214,7 @@ async function initDb(){
   applyRole(rl);
   $('who').hidden=false; $('whoName').textContent=(account.name||account.username)+' · '+ROLE_LABEL[rl];
   await loadAll();
-  if(canEdit)logEvent('login');
+  logSignIn();
 }
 $('btnLogin').onclick=()=>{if(msalApp)msalApp.loginRedirect({scopes:SCOPES})};
 $('btnOut').onclick=()=>{if(msalApp)msalApp.logoutRedirect({account})};
@@ -1386,7 +1414,7 @@ function renderUsers(){
     const e=lc(em.value); if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){toast('Enter a valid email address'); em.focus(); return}
     if(cfgAdmins().includes(e)){toast('That account is already an owner'); return}
     if(access.users[e]){toast('That user is already on the list. Change the role in the table.'); return}
-    accessChange(()=>{access.users[e]={role:rs.value,name:nm.value.trim().slice(0,60),added:new Date().toISOString(),by:account?account.username:'demo'}; logEvent('access',{act:'add',u:e,b:rs.value})},e+' added as '+ROLE_LABEL[rs.value]);
+    accessChange(()=>{access.users[e]={role:rs.value,name:nm.value.trim().slice(0,60),added:new Date().toISOString(),by:account?account.username:'demo'}; logEvent('access',{act:'add',u:e,un:nm.value.trim(),b:rs.value})},e+' added as '+ROLE_LABEL[rs.value]);
   };
   const sw=el2('div','sugwrap'); const sug=el2('div','sug'); sug.hidden=true; sw.append(em,sug);
   let items=[], act=-1;
@@ -1440,9 +1468,9 @@ function renderUsers(){
   rows.forEach(r=>{
     const tr=document.createElement('tr'); const c1=document.createElement('td'); const nmEl=el2('div','uname',r.u.name||r.e); c1.appendChild(nmEl); if(r.u.name)c1.appendChild(el2('div','usub',r.e)); if(r.owner)c1.appendChild(el2('span','badge','Owner (set in config.js)'));
     const c2=document.createElement('td'); const sel=roleSelect(r.owner?'admin':r.u.role,r.owner||r.e===me); c2.appendChild(sel);
-    sel.onchange=()=>{const old=r.u.role; accessChange(()=>{access.users[r.e].role=sel.value; logEvent('access',{act:'role',u:r.e,a:old,b:sel.value})},r.e+' is now '+ROLE_LABEL[sel.value])};
+    sel.onchange=()=>{const old=r.u.role; accessChange(()=>{access.users[r.e].role=sel.value; logEvent('access',{act:'role',u:r.e,un:r.u.name||'',a:old,b:sel.value})},r.e+' is now '+ROLE_LABEL[sel.value])};
     const c3=el2('td','m',r.u.added?new Date(r.u.added).toLocaleDateString('en-GB',{timeZone:TZ,dateStyle:'medium'})+(r.u.by?' by '+r.u.by:''):'—');
-    const c4=document.createElement('td'); if(!r.owner&&r.e!==me){const rm=el2('button','btn sm','Remove'); rm.type='button'; rm.onclick=()=>{if(!confirm('Remove '+r.e+' from the list?\nThey will get the default role.'))return; const old=r.u.role; accessChange(()=>{delete access.users[r.e]; logEvent('access',{act:'remove',u:r.e,a:old})},r.e+' removed')}; c4.appendChild(rm)}
+    const c4=document.createElement('td'); if(!r.owner&&r.e!==me){const rm=el2('button','btn sm','Remove'); rm.type='button'; rm.onclick=()=>{if(!confirm('Remove '+r.e+' from the list?\nThey will get the default role.'))return; const old=r.u.role; accessChange(()=>{delete access.users[r.e]; logEvent('access',{act:'remove',u:r.e,un:r.u.name||'',a:old})},r.e+' removed')}; c4.appendChild(rm)}
     tr.append(c1,c2,c3,c4); tb.appendChild(tr)});
   t.appendChild(tb); wrap.appendChild(t); b.appendChild(wrap);
   const note=el2('p','admNote','Also share the OneDrive folder in OneDrive: Admin and Editor need “Can edit”, Viewer needs “Can view”. These roles decide what each person can do in the app.'); b.appendChild(note);
@@ -1453,14 +1481,14 @@ function auditDetail(x){const k=x.k||'rename';
   if(k==='rename')return x.y+' · '+x.c+': '+(x.a||'—')+' → '+(x.b||'—');
   if(k==='year')return 'Created '+x.y+(x.copy?' (names copied)':'');
   if(k==='import')return x.n+' changes in '+x.y;
-  if(k==='access')return x.act==='add'?x.u+' as '+ROLE_LABEL[x.b]:x.act==='role'?x.u+': '+ROLE_LABEL[x.a]+' → '+ROLE_LABEL[x.b]:x.u+' (was '+(ROLE_LABEL[x.a]||'listed')+')';
-  if(k==='login')return 'As '+(ROLE_LABEL[x.r]||x.r||'');
+  if(k==='access'){const tu=(x.un?x.un+' ('+x.u+')':x.u); return x.act==='add'?tu+' as '+ROLE_LABEL[x.b]:x.act==='role'?tu+': '+ROLE_LABEL[x.a]+' → '+ROLE_LABEL[x.b]:tu+' (was '+(ROLE_LABEL[x.a]||'listed')+')'}
+  if(k==='login')return 'As '+(ROLE_LABEL[x.r]||x.r||'')+(x.d?' · '+x.d:'');
   return ''}
 function auditFiltered(){const q=lc($('auQ')?$('auQ').value:''), kind=$('auK')?$('auK').value:'all';
-  return auditCache.filter(x=>{const k=x.k||'rename'; if(kind!=='all'&&k!==kind)return false; if(!q)return true; return lc(x.by+' '+auditAction(x)+' '+auditDetail(x)).includes(q)})}
+  return auditCache.filter(x=>{const k=x.k||'rename'; if(kind!=='all'&&k!==kind)return false; if(!q)return true; return lc((x.n||'')+' '+x.by+' '+auditAction(x)+' '+auditDetail(x)).includes(q)})}
 async function renderAudit(reload){
   const b=$('admBody');
-  if(reload!==false||!auditCache.length){b.textContent='Loading…'; try{auditCache=(await readAudit()).slice().reverse()}catch(e){b.textContent='Couldn’t read the audit log.'; return}}
+  if(reload!==false||!auditCache.length){b.textContent='Loading…'; try{auditCache=(await readAudit()).concat(await readSignins().catch(()=>[])).sort((a,b)=>String(b.t).localeCompare(String(a.t)))}catch(e){b.textContent='Couldn’t read the audit log.'; return}}
   b.innerHTML=''; const bar=el2('div','addRow');
   const q=document.createElement('input'); q.id='auQ'; q.type='search'; q.placeholder='Filter by user, action or room'; q.setAttribute('aria-label','Filter');
   const k=document.createElement('select'); k.id='auK'; k.className='rsel'; [['all','All actions'],['rename','Renamed'],['year','New year'],['import','Imported CSV'],['access','Access'],['login','Signed in']].forEach(([v,l])=>{const o=document.createElement('option'); o.value=v; o.textContent=l; k.appendChild(o)});
@@ -1469,7 +1497,7 @@ async function renderAudit(reload){
   const list=el2('div','tblScroll adm'); b.appendChild(list); const foot=el2('p','admNote'); b.appendChild(foot);
   function draw(){const rows=auditFiltered(); list.innerHTML=''; const t=document.createElement('table'); t.innerHTML='<thead><tr><th>When</th><th>User</th><th>Action</th><th>Detail</th></tr></thead>'; const tb=document.createElement('tbody');
     rows.slice(0,auditShown).forEach(x=>{const tr=document.createElement('tr'); const when=new Date(x.t).toLocaleString('en-GB',{timeZone:TZ,dateStyle:'short',timeStyle:'short'});
-      [[when,'m'],[x.by,''],[auditAction(x),''],[auditDetail(x),'']].forEach(([v,c])=>tr.appendChild(el2('td',c,v))); tb.appendChild(tr)});
+      const tdU=document.createElement('td'); tdU.appendChild(el2('div','uname',x.n||x.by)); if(x.n)tdU.appendChild(el2('div','usub',x.by)); tr.appendChild(el2('td','m',when)); tr.appendChild(tdU); tr.appendChild(el2('td','',auditAction(x))); tr.appendChild(el2('td','',auditDetail(x))); tb.appendChild(tr)});
     if(!rows.length){const tr=document.createElement('tr'); const td=el2('td','',auditCache.length?'No entries match.':'No activity recorded yet.'); td.colSpan=4; tr.appendChild(td); tb.appendChild(tr)}
     t.appendChild(tb); list.appendChild(t);
     foot.innerHTML=''; foot.appendChild(document.createTextNode(Math.min(auditShown,rows.length)+' of '+rows.length+' entries (newest first, times in Brunei time). '));
@@ -1477,7 +1505,7 @@ async function renderAudit(reload){
   q.oninput=()=>{auditShown=200; draw()}; k.onchange=()=>{auditShown=200; draw()}; draw();
 }
 $('btnAuditCsv').onclick=()=>{
-  const rows=[['When (Brunei time)','User','Role','Action','Detail']].concat(auditFiltered().map(x=>[new Date(x.t).toLocaleString('en-GB',{timeZone:TZ}),x.by,x.r||'',auditAction(x),auditDetail(x)]));
+  const rows=[['When (Brunei time)','Name','Email','Role','Action','Detail']].concat(auditFiltered().map(x=>[new Date(x.t).toLocaleString('en-GB',{timeZone:TZ}),x.n||'',x.by,x.r||'',auditAction(x),auditDetail(x)]));
   const blob=new Blob(['\uFEFF'+rows.map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='syshhb-map-audit-log.csv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000)};
 
 /* ---------- CSV ---------- */
