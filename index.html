@@ -625,23 +625,38 @@ function wrap(text,fs,L){
   }
   if(cur)lines.push(cur); return lines;
 }
-function layout(c,code,name,mode){
-  const L=(c.rot?c.h:c.w)-4, T=(c.rot?c.w:c.h)-3;
-  const wantName=!!name&&(mode!=='code'||!code);
-  const wantCode=!!code&&(mode!=='name'||!name);
+function tryFs(c,code,name,mode,fs){
+  const L=c.w-2.6, T=c.h-2.4;
+  const wantName=!!name&&(mode!=='code'||!code), wantCode=!!code&&(mode!=='name'||!name);
+  if(!wantName&&!wantCode)return {ok:true,out:[]};
+  const cf=wantName?Math.min(fs*0.86,5.2):fs;
+  if(wantCode&&W(code,true)*cf/10>L)return {ok:false,out:null};
+  let nl=[]; if(wantName){nl=wrap(name,fs,L); if(!nl)return {ok:false,out:null}}
+  const H=nl.length*fs*1.1+(wantCode?cf*1.25:0);
+  const out=[]; if(wantCode)out.push({t:code,fs:cf,code:true}); nl.forEach(t=>out.push({t,fs}));
+  return {ok:H<=T,out};
+}
+const maxFsOf=c=>Math.max(5,Math.min(8.5,Math.min(c.w,c.h)/4.6));
+function layout(c,code,name,mode,force){
+  if(force!==undefined&&force!==null){const r=tryFs(c,code,name,mode,force); if(r.out)return r.out}
+  const wantName=!!name&&(mode!=='code'||!code), wantCode=!!code&&(mode!=='name'||!name);
   if(!wantName&&!wantCode)return [];
-  const maxFs=Math.max(5,Math.min(9.5,Math.min(c.w,c.h)/4.6));
   let best=null;
-  for(let fs=maxFs;fs>=3;fs-=0.2){
-    const cf=wantName?Math.min(fs*0.86,5.2):fs;
-    if(wantCode&&W(code,true)*cf/10>L)continue;
-    let nl=[]; if(wantName){nl=wrap(name,fs,L); if(!nl)continue}
-    const H=nl.length*fs*1.1+(wantCode?cf*1.25:0);
-    best={fs,cf,nl}; if(H<=T)break;
+  for(let fs=maxFsOf(c);fs>=3;fs-=0.2){const r=tryFs(c,code,name,mode,fs); if(r.out){best=r.out; if(r.ok)break}}
+  if(best)return best;
+  const out=[]; if(wantCode)out.push({t:code,fs:3,code:true}); if(wantName)name.split(' ').forEach(t=>out.push({t,fs:3})); return out;
+}
+/* every room of the same size on a map gets the same text size, so the labels look even */
+let FSM={};
+function computeFS(mode,year){
+  const groups={};
+  CELLS.forEach(c=>{const e=c.lb?Object.assign({},c,{w:c.lb[2],h:c.lb[3],rot:false}):c; const k=e.p+'|'+Math.round(e.w/3)+'|'+(e.h>=e.w*1.3?'tall':Math.round(e.h/3)); (groups[k]=groups[k]||[]).push([c,e])});
+  const out={};
+  for(const k in groups){
+    const mem=groups[k]; let best=3;
+    for(let fs=maxFsOf(mem[0][1]);fs>=3;fs-=0.2){ if(mem.every(([c,e])=>tryFs(e,codeOf(c),nameOf(year,c.k),mode,fs).ok)){best=fs;break} }
+    mem.forEach(([c])=>{out[c.k]=best});
   }
-  if(!best){best={fs:3,cf:3,nl:wantName?name.split(' '):[]}}
-  const out=[]; if(wantCode)out.push({t:code,fs:best.cf,code:true});
-  best.nl.forEach(t=>out.push({t,fs:best.fs}));
   return out;
 }
 /* the Admin room (first floor of Lobby 2) grows to cover the whole lobby when it is chosen or when only the first floor is shown */
@@ -656,7 +671,7 @@ function syncGeo(c){
 function syncFull(){CELLS.forEach(c=>{if(c.full&&isFull(c)!==!!c._f){c._f=isFull(c); syncGeo(c)}})}
 function paintLabel(g,c0,mode,year){mode=mode||S.mode;year=year||S.year; const c=c0.lb?Object.assign({},c0,{x:c0.lb[0],y:c0.lb[1],w:c0.lb[2],h:c0.lb[3],rot:false}):(c0.full?Object.assign({},c0,geo(c0)):c0);
   const t=g.querySelector('text'); while(t.firstChild)t.removeChild(t.firstChild);
-  const lines=layout(c,codeOf(c),nameOf(year,c.k),mode); if(!lines.length)return;
+  const lines=layout(c,codeOf(c),nameOf(year,c.k),mode,FSM[c.k]); if(!lines.length)return;
   const lh=l=>l.fs*1.1, H=lines.reduce((a,l)=>a+lh(l),0);
   const cx=c.x+c.w/2, cy=c.y+c.h/2;
   t.setAttribute('transform','translate('+cx+','+cy+')'+(c.rot?' rotate(-90)':''));
@@ -713,6 +728,7 @@ function buildMap(){
 }
 function paintTitle(){const t=$('ttlText'); if(t)t.textContent=TITLES(S.year)[S.page]; const t3=document.querySelector('#world3 .pl .ttl'); if(t3)t3.textContent=TITLES(S.year)[S.page]}
 function paintLabels(){
+  FSM=computeFS(S.mode,S.year);
   labels3d();
   CELLS.forEach(c=>{const g=roomEls[c.k]; if(!g)return; paintLabel(g,c);
     const nm=nameOf(S.year,c.k); g.setAttribute('aria-label',(c.code||NOCODE[c.k]||'Room')+(nm?', '+nm:', no class assigned'));});
@@ -867,8 +883,9 @@ function build3d(){
 }
 function labels3d(){
   if(!S.v3)return;
+  FSM=computeFS(S.mode,S.year);
   for(const k in room3){const c=byKey[k], t=room3[k].querySelector('.t'); t.innerHTML='';
-    const lb=c.lb3||c.lb; const cc=lb?Object.assign({},c,{w:lb[2],h:lb[3],rot:false}):(c.full?Object.assign({},c,geo(c)):c); const lines=layout(cc,codeOf(c),nameOf(S.year,k),S.mode); if(!lines.length)continue;
+    const lb=c.lb3||c.lb; const cc=lb?Object.assign({},c,{w:lb[2],h:lb[3],rot:false}):(c.full?Object.assign({},c,geo(c)):c); const lines=layout(cc,codeOf(c),nameOf(S.year,k),S.mode,c.lb3?undefined:FSM[k]); if(!lines.length)continue;
     const wrap=document.createElement('div'); wrap.className='tx'; wrap.style.width=((cc.rot?cc.h:cc.w)*K3).toFixed(1)+'px'; if(cc.rot)wrap.style.transform='rotate(-90deg)';
     if(lb){t.style.alignItems='flex-start'; wrap.style.marginTop=((lb[1]-geo(c).y)*K3).toFixed(1)+'px'}
     lines.forEach(l=>{const d=document.createElement('div'); d.textContent=l.t; d.style.fontSize=(l.fs*K3).toFixed(1)+'px'; d.style.fontWeight=l.code?'600':'700'; if(l.code)d.style.opacity='.8'; wrap.appendChild(d)}); t.appendChild(wrap)}
@@ -1254,12 +1271,13 @@ $('logScrim').addEventListener('click',e=>{if(e.target===$('logScrim'))$('logScr
 
 /* ---------- print ---------- */
 function staticMap(i,mode,year,noLabels){
+  const prevFS=FSM; if(!noLabels)FSM=computeFS(mode,year);
   const s=document.createElementNS(NS,'svg'); s.setAttribute('viewBox','20 6 920 518'); s.setAttribute('xmlns',NS);
   const base=PAGES[i].svg.replace(/(id="|href="#|url\(#)p(\d)-/g,'$1pr$2-');
   s.innerHTML='<g>'+base+'</g>';
   const t=el('text',{x:480,y:36.8,class:'ttl'}); t.textContent=TITLES(year)[i]; s.appendChild(t);
   if(!noLabels)CELLS.filter(c=>c.p===i).forEach(c=>{const g=el('g',{}); if(c.ov)g.appendChild(ovRect(c)); g.appendChild(el('text',{class:'lbl'})); s.appendChild(g); paintLabel(g,c,mode,year)});
-  return s;
+  FSM=prevFS; return s;
 }
 function doPrint(){
   const all=document.querySelector('input[name=prScope]:checked').value==='all'; const mode=$('prMode').value;
