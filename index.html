@@ -434,6 +434,7 @@ html,body{overscroll-behavior:none}
 .sitem .st{flex:1;min-width:0;display:flex;flex-direction:column}.sitem .st b{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sitem .st span{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sitem em{font-style:normal;font-size:11px;font-weight:700;padding:1px 8px;border-radius:10px;background:var(--brand-soft);color:var(--brand)}
 .snote{padding:10px;font-size:12.5px;color:var(--muted)}
+.badge.auto{background:#fff4d6;color:#8a6200}:root[data-theme=dark] .badge.auto{background:#3a3217;color:#f2c46a}
 </style>
 </head>
 <body>
@@ -957,12 +958,40 @@ function renderPanel(){
 }
 
 /* ---------- sign-in, OneDrive storage, editing ---------- */
-const CONFIG=Object.assign({CLIENT_ID:'',TENANT:'organizations',OWNER:'it.helpdesk@syayasan.edu.bn',FOLDER:'SYSHHB-School-Map',FOLDER_LINK:'',DEFAULT_ROLE:'viewer',ADMINS:[]},window.SCHOOLMAP_CONFIG||{});
+const CONFIG=Object.assign({CLIENT_ID:'',TENANT:'organizations',OWNER:'it.helpdesk@syayasan.edu.bn',FOLDER:'SYSHHB-School-Map',FOLDER_LINK:'',SIGNIN_LINK:'',DEFAULT_ROLE:'viewer',ADMINS:[]},window.SCHOOLMAP_CONFIG||{});
 const SCOPES=['User.Read','Files.ReadWrite.All'];
 const DEMO=!CONFIG.CLIENT_ID;
 const GRAPH='https://graph.microsoft.com/v1.0';
 const FILEP='{F}';
 let baseCache=null;
+async function resolveShare(link){
+  const enc='u!'+btoa(unescape(encodeURIComponent(link))).replace(/=+$/,'').replace(/\//g,'_').replace(/\+/g,'-');
+  const t=await token();
+  const r=await fetch(GRAPH+'/shares/'+enc+'/driveItem?$select=id,parentReference',{headers:{Authorization:'Bearer '+t}});
+  if(r.status===403||r.status===404||r.status===401)throw new Error('you don’t have access to the OneDrive folder. Ask it.helpdesk to share it with you');
+  if(!r.ok)throw new Error('OneDrive error '+r.status);
+  const j=await r.json(); return {drive:j.parentReference.driveId,id:j.id};
+}
+let sbCache=null, folderInfo=null;
+async function sbaseP(){   /* where sign-in records go: an org-wide edit link if configured, else the signins subfolder */
+  if(sbCache)return sbCache;
+  if(CONFIG.SIGNIN_LINK){const f=await resolveShare(CONFIG.SIGNIN_LINK); return sbCache='/drives/'+f.drive+'/items/'+f.id+':/'}
+  return sbCache=(await baseP())+'signins/';
+}
+async function folderInfoP(){
+  if(folderInfo)return folderInfo;
+  if(CONFIG.FOLDER_LINK)return folderInfo=await resolveShare(CONFIG.FOLDER_LINK);
+  const r=await graph('/users/'+encodeURIComponent(CONFIG.OWNER)+'/drive/root:/'+CONFIG.FOLDER+'?$select=id,parentReference'); if(!r.ok)throw new Error('folder not found');
+  const j=await r.json(); return folderInfo={drive:j.parentReference.driveId,id:j.id};
+}
+async function shareFolderTo(email,roleName){   /* best effort: give the person OneDrive access that matches their role */
+  if(DEMO||!msalApp)return 'skipped';
+  try{
+    const f=await folderInfoP();
+    const r=await graph('/drives/'+f.drive+'/items/'+f.id+'/invite',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({recipients:[{email}],message:'SYSHHB Map access',requireSignIn:true,sendInvitation:false,roles:[roleName==='viewer'?'read':'write']})});
+    return r.ok?'shared':'failed';
+  }catch(e){return 'failed'}
+}
 async function baseP(){
   if(baseCache)return baseCache;
   if(CONFIG.FOLDER_LINK){
@@ -982,7 +1011,7 @@ async function token(){
   try{const r=await msalApp.acquireTokenSilent({scopes:SCOPES,account}); return r.accessToken}
   catch(e){msalApp.acquireTokenRedirect({scopes:SCOPES,account}); throw new Error('Signing in again…')}
 }
-async function graph(path,opt){opt=opt||{}; if(path.indexOf('{F}')===0)path=(await baseP())+path.slice(3); const t=await token(); return fetch(GRAPH+path,Object.assign({},opt,{headers:Object.assign({Authorization:'Bearer '+t},opt.headers||{})}))}
+async function graph(path,opt){opt=opt||{}; if(path.indexOf('{F}')===0)path=(await baseP())+path.slice(3); else if(path.indexOf('{S}')===0)path=(await sbaseP())+path.slice(3); const t=await token(); return fetch(GRAPH+path,Object.assign({},opt,{headers:Object.assign({Authorization:'Bearer '+t},opt.headers||{})}))}
 const DATA_REV=4; let needMigrate=false; const migrated={};
 const NEWKEYS={2:{TA_A:'Admin'},3:DATA.seed?{T_KITCHEN:'Kitchen',T_STAGE:'Stage',T_TOILET_G:'Toilet',T_STORE_G:'Store Room',T_ELEC:'Electrical Room',T_TOILET_1:'Toilet'}:{},4:{T_LOBBY2:'Lobby 2'}};
 function ingest(j){
@@ -1062,24 +1091,24 @@ function logEvent(k,extra){auditQ.push(Object.assign({t:new Date().toISOString()
 const SIGNIN_P='signins/signins.json';
 async function readSignins(){
   if(DEMO){try{return JSON.parse(localStorage.getItem('ysm-signins')||'[]')}catch(e){return []}}
-  const r=await graph(FILEP+SIGNIN_P+':/content'); if(r.status===404)return []; if(!r.ok)throw new Error('OneDrive error '+r.status); return r.json();
+  const r=await graph('{S}signins.json:/content'); if(r.status===404)return []; if(!r.ok)throw new Error('OneDrive error '+r.status); return r.json();
 }
-async function logSignIn(){
+async function logSignIn(rl){
   if(!account&&!DEMO)return;
   const who=DEMO?'demo':lc(account.username);
   try{if(sessionStorage.getItem('ysm-si')===who)return}catch(e){}
-  const entry={t:new Date().toISOString(),by:DEMO?'demo':account.username,n:DEMO?'Demo':(account.name||''),r:role,k:'login',d:(/Mobi|Android|iPhone/i.test(navigator.userAgent)||innerWidth<=860)?'Mobile':'Desktop'};
+  const entry={t:new Date().toISOString(),by:DEMO?'demo':account.username,n:DEMO?'Demo':(account.name||''),r:rl||role,k:'login',d:(/Mobi|Android|iPhone/i.test(navigator.userAgent)||innerWidth<=860)?'Mobile':'Desktop'};
   try{
     if(DEMO){const a=await readSignins(); a.push(entry); localStorage.setItem('ysm-signins',JSON.stringify(a.slice(-5000)))}
     else{
       for(let i=0;i<4;i++){
-        const m=await graph(FILEP+SIGNIN_P); let arr=[], et=null;
+        const m=await graph('{S}signins.json'); let arr=[], et=null;
         if(m.status===404){arr=[]}
-        else if(m.ok){const meta=await m.json(); et=meta.eTag||null; const c=await graph(FILEP+SIGNIN_P+':/content'); if(c.ok){try{arr=await c.json()}catch(e){arr=[]}}}
+        else if(m.ok){const meta=await m.json(); et=meta.eTag||null; const c=await graph('{S}signins.json:/content'); if(c.ok){try{arr=await c.json()}catch(e){arr=[]}}}
         else return;
         arr.push(entry); arr=arr.slice(-5000);
         const h={'Content-Type':'application/json'}; if(et)h['If-Match']=et;
-        const r=await graph(FILEP+SIGNIN_P+':/content',{method:'PUT',headers:h,body:JSON.stringify(arr)});
+        const r=await graph('{S}signins.json:/content',{method:'PUT',headers:h,body:JSON.stringify(arr)});
         if(r.status===412)continue; if(!r.ok)return; break;
       }
     }
@@ -1209,6 +1238,7 @@ async function initDb(){
   try{await loadAccess()}catch(err){showLogin('Couldn’t read the access list: '+(err&&err.message||'unknown error'),true); return}
   const rl=resolveRole(account.username);
   if(rl==='none'){
+    logSignIn('none');
     showLogin('Your account ('+account.username+') is not on the access list. Ask the admin to add you, or sign in with another account.',true);
     const bl=$('btnLogin'); bl.hidden=false; bl.lastElementChild.textContent='Sign in with another account'; bl.onclick=()=>msalApp.logoutRedirect({account}); return}
   applyRole(rl);
@@ -1399,10 +1429,14 @@ function renderAdmin(){if(!isAdmin){$('admBody').textContent='Only admins can op
 function el2(tag,cls,txt){const e=document.createElement(tag); if(cls)e.className=cls; if(txt!=null)e.textContent=txt; return e}
 function roleSelect(cur,disabled){const sel=document.createElement('select'); sel.className='rsel'; ROLES.forEach(r=>{const o=document.createElement('option'); o.value=r; o.textContent=ROLE_LABEL[r]; if(r===cur)o.selected=true; sel.appendChild(o)}); sel.disabled=!!disabled; return sel}
 async function accessChange(fn,okMsg){
-  try{fn(); await saveAccess(); toast(okMsg); await flushAudit()}catch(err){toast(err.message,); }
-  renderUsers();
+  let ok=true;
+  try{fn(); await saveAccess(); toast(okMsg); await flushAudit()}catch(err){ok=false; toast(err.message)}
+  renderUsers(); return ok;
 }
 async function flushAudit(){try{await writeAudit()}catch(e){}}
+let seenUsers=null, seenLoading=false;
+async function loadSeen(){const a=await readSignins().catch(()=>[]); const m={}; a.forEach(x=>{const e=lc(x.by); if(!e||e==='demo')return; const o=m[e]||(m[e]={email:e,name:'',first:x.t,last:x.t,n:0}); if(x.n)o.name=x.n; if(String(x.t)<String(o.first))o.first=x.t; if(String(x.t)>String(o.last))o.last=x.t; o.n++}); seenUsers=m}
+async function autoShare(email,roleName){const r=await shareFolderTo(email,roleName); if(r==='shared')toast('OneDrive folder shared with '+email+' ('+(roleName==='viewer'?'Can view':'Can edit')+')'); else if(r==='failed')toast('Couldn’t share the folder automatically. Share it in OneDrive.')}
 function renderUsers(){
   const b=$('admBody'); b.innerHTML='';
   const intro=el2('p','admIntro'); intro.innerHTML='<b>Admin</b> edits class names, manages users and reads the audit log. <b>Editor</b> edits class names. <b>Viewer</b> can look and print only. Everyone who signs in and is not listed below gets the default role: <b>'+esc(CONFIG.DEFAULT_ROLE==='none'?'no access':ROLE_LABEL[CONFIG.DEFAULT_ROLE]||'Viewer')+'</b>.';
@@ -1414,7 +1448,7 @@ function renderUsers(){
     const e=lc(em.value); if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){toast('Enter a valid email address'); em.focus(); return}
     if(cfgAdmins().includes(e)){toast('That account is already an owner'); return}
     if(access.users[e]){toast('That user is already on the list. Change the role in the table.'); return}
-    accessChange(()=>{access.users[e]={role:rs.value,name:nm.value.trim().slice(0,60),added:new Date().toISOString(),by:account?account.username:'demo'}; logEvent('access',{act:'add',u:e,un:nm.value.trim(),b:rs.value})},e+' added as '+ROLE_LABEL[rs.value]);
+    accessChange(()=>{access.users[e]={role:rs.value,name:nm.value.trim().slice(0,60),added:new Date().toISOString(),by:account?account.username:'demo'}; logEvent('access',{act:'add',u:e,un:nm.value.trim(),b:rs.value})},e+' added as '+ROLE_LABEL[rs.value]).then(ok=>{if(ok)autoShare(e,rs.value)});
   };
   const sw=el2('div','sugwrap'); const sug=el2('div','sug'); sug.hidden=true; sw.append(em,sug);
   let items=[], act=-1;
@@ -1464,13 +1498,15 @@ function renderUsers(){
   const wrap=el2('div','tblScroll adm'); const t=document.createElement('table'); t.innerHTML='<thead><tr><th>User</th><th>Role</th><th>Added</th><th></th></tr></thead>'; const tb=document.createElement('tbody');
   const me=account?lc(account.username):'';
   const rows=[]; cfgAdmins().forEach(e=>rows.push({e,owner:true,u:access.users[e]||{}}));
+  if(seenUsers===null&&!seenLoading){seenLoading=true; loadSeen().then(()=>{seenLoading=false; if(S.view==='adm'&&admT==='users')renderUsers()})}
   Object.keys(access.users).filter(e=>!cfgAdmins().includes(e)).sort().forEach(e=>rows.push({e,owner:false,u:access.users[e]}));
+  Object.keys(seenUsers||{}).filter(e=>!access.users[e]&&!cfgAdmins().includes(e)).sort().forEach(e=>{const o=seenUsers[e]; rows.push({e,owner:false,auto:true,u:{role:CONFIG.DEFAULT_ROLE==='none'?'viewer':(ROLES.includes(CONFIG.DEFAULT_ROLE)?CONFIG.DEFAULT_ROLE:'viewer'),name:o.name,added:o.first,by:'',n:o.n,last:o.last}})});
   rows.forEach(r=>{
-    const tr=document.createElement('tr'); const c1=document.createElement('td'); const nmEl=el2('div','uname',r.u.name||r.e); c1.appendChild(nmEl); if(r.u.name)c1.appendChild(el2('div','usub',r.e)); if(r.owner)c1.appendChild(el2('span','badge','Owner (set in config.js)'));
+    const tr=document.createElement('tr'); const c1=document.createElement('td'); const nmEl=el2('div','uname',r.u.name||r.e); c1.appendChild(nmEl); if(r.u.name)c1.appendChild(el2('div','usub',r.e)); if(r.owner)c1.appendChild(el2('span','badge','Owner (set in config.js)')); if(r.auto)c1.appendChild(el2('span','badge auto','Added automatically at first sign-in'));
     const c2=document.createElement('td'); const sel=roleSelect(r.owner?'admin':r.u.role,r.owner||r.e===me); c2.appendChild(sel);
-    sel.onchange=()=>{const old=r.u.role; accessChange(()=>{access.users[r.e].role=sel.value; logEvent('access',{act:'role',u:r.e,un:r.u.name||'',a:old,b:sel.value})},r.e+' is now '+ROLE_LABEL[sel.value])};
-    const c3=el2('td','m',r.u.added?new Date(r.u.added).toLocaleDateString('en-GB',{timeZone:TZ,dateStyle:'medium'})+(r.u.by?' by '+r.u.by:''):'—');
-    const c4=document.createElement('td'); if(!r.owner&&r.e!==me){const rm=el2('button','btn sm','Remove'); rm.type='button'; rm.onclick=()=>{if(!confirm('Remove '+r.e+' from the list?\nThey will get the default role.'))return; const old=r.u.role; accessChange(()=>{delete access.users[r.e]; logEvent('access',{act:'remove',u:r.e,un:r.u.name||'',a:old})},r.e+' removed')}; c4.appendChild(rm)}
+    sel.onchange=()=>{if(r.auto){const nr=sel.value; accessChange(()=>{access.users[r.e]={role:nr,name:r.u.name||'',added:new Date().toISOString(),by:account?account.username:'demo'}; logEvent('access',{act:'add',u:r.e,un:r.u.name||'',b:nr})},r.e+' is now '+ROLE_LABEL[nr]).then(ok=>{if(ok)autoShare(r.e,nr)}); return} const old=r.u.role; accessChange(()=>{access.users[r.e].role=sel.value; logEvent('access',{act:'role',u:r.e,un:r.u.name||'',a:old,b:sel.value})},r.e+' is now '+ROLE_LABEL[sel.value])};
+    const c3=el2('td','m',r.auto?('First sign-in '+new Date(r.u.added).toLocaleDateString('en-GB',{timeZone:TZ,dateStyle:'medium'})+' · '+r.u.n+' sign-in'+(r.u.n===1?'':'s')):r.u.added?new Date(r.u.added).toLocaleDateString('en-GB',{timeZone:TZ,dateStyle:'medium'})+(r.u.by?' by '+r.u.by:''):'—');
+    const c4=document.createElement('td'); if(!r.owner&&!r.auto&&r.e!==me){const rm=el2('button','btn sm','Remove'); rm.type='button'; rm.onclick=()=>{if(!confirm('Remove '+r.e+' from the list?\nThey will get the default role.'))return; const old=r.u.role; accessChange(()=>{delete access.users[r.e]; logEvent('access',{act:'remove',u:r.e,un:r.u.name||'',a:old})},r.e+' removed')}; c4.appendChild(rm)}
     tr.append(c1,c2,c3,c4); tb.appendChild(tr)});
   t.appendChild(tb); wrap.appendChild(t); b.appendChild(wrap);
   const note=el2('p','admNote','Also share the OneDrive folder in OneDrive: Admin and Editor need “Can edit”, Viewer needs “Can view”. These roles decide what each person can do in the app.'); b.appendChild(note);
