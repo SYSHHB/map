@@ -13,7 +13,6 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
 <style>
 :root{
   box-sizing:border-box;
@@ -495,10 +494,71 @@ main{gap:16px;padding:4px 16px 18px}
   #panel{border-radius:26px 26px 0 0}
 }
 </style>
+<style id="gitbook-theme">
+/* ===== SYSHHB GitBook theme (same as the other 5 systems) ===== */
+:root{
+  --bg:#FFFFFF; --surface:#FFFFFF; --surface2:#F7F9F8; --ink:#1F2D26; --muted:#64756C;
+  --line:#E1E8E4; --line2:#D2DDD7; --brand:#1E7A46; --brand2:#1E7A46; --brand-soft:#E8F3EC;
+  --fh:Arial,"Helvetica Neue",Helvetica,sans-serif; --fb:Arial,"Helvetica Neue",Helvetica,sans-serif;
+  --sidew:272px;
+}
+:root[data-theme=dark]{
+  --bg:#0F1A15; --surface:#13211A; --surface2:#182A21; --ink:#E6EFEA; --muted:#92A89C;
+  --line:#25382E; --line2:#32493B; --brand:#4CC083; --brand2:#4CC083; --brand-soft:#143023;
+}
+body{font-family:Arial,"Helvetica Neue",Helvetica,sans-serif}
+button,input,select{font-family:inherit}
+
+/* sidebar */
+.gb-side{position:fixed;inset:0 auto 0 0;width:var(--sidew);background:var(--surface2);border-right:1px solid var(--line);overflow-y:auto;padding:18px 14px 24px;z-index:30}
+.gb-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);padding:4px 6px 14px}
+.gb-brand img{width:36px;height:36px;border-radius:50%;flex:none}
+.gb-brand b{display:block;font-size:15px;line-height:1.2}
+.gb-brand small{color:var(--muted);font-size:11px}
+.gb-group{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 8px 6px}
+.gb-side nav a{display:block;text-decoration:none;color:var(--ink);font-size:14px;padding:7px 10px;border-radius:8px;margin-bottom:1px}
+.gb-side nav a:hover{background:var(--brand-soft)}
+.gb-side nav a.active{background:var(--brand-soft);color:var(--brand);font-weight:700;box-shadow:inset 3px 0 0 var(--brand)}
+.gb-menu,.gb-scrim{display:none}
+#app{margin-left:var(--sidew)}
+
+/* header: white GitBook top bar instead of green hero */
+#app .top{background:var(--bg);color:var(--ink);border:0;border-bottom:1px solid var(--line);border-radius:0;box-shadow:none;padding:10px 20px}
+#app .top::before{display:none}
+#app .top .brand{display:none}
+#app .top .btn,#app .top .icon-btn,#app select#year{background-color:var(--surface2);color:var(--ink);border:1px solid var(--line);border-radius:8px;-webkit-backdrop-filter:none;backdrop-filter:none;font-weight:700}
+#app .top .btn:hover,#app .top .icon-btn:hover{background-color:var(--brand-soft)}
+#app .top .who,#app .top .who b{color:var(--ink)}
+#app .top .status{color:var(--muted)}
+.bar{padding:10px 20px}
+main{padding:0 20px 20px}
+.tab[aria-selected=true]{background:var(--brand);color:#fff}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.seg button[aria-pressed=true]{background:var(--brand-soft);color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand)}
+
+@media (max-width:860px){
+  .gb-side{transform:translateX(-100%);transition:transform .2s;z-index:55}
+  body.gb-open .gb-side{transform:none}
+  body.gb-open .gb-scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:54}
+  #app{margin-left:0}
+  #app .top{padding:8px 12px}
+  #app .top .brand{display:flex}
+  .gb-menu{display:inline-grid;place-items:center;width:36px;height:36px;border:1px solid var(--line);border-radius:8px;background:var(--surface2);color:var(--ink);font-size:18px;flex:none}
+  .bar{padding:8px 12px}
+  main{padding:0 10px 10px}
+}
+</style>
 </head>
 <body>
+<aside class="gb-side" id="gbSide">
+<a class="gb-brand" href="index.html"><img src="logo.png" alt=""><span><b>SYSHHB</b><small>Yayasan Sultan Haji Hassanal Bolkiah</small></span></a>
+<nav><div class="gb-group">Systems</div>
+<a href="index.html">Portal</a><a href="helpdesk.html">Helpdesk</a><a href="purchase.html">Purchase Tracker</a><a href="inventory.html">IT Inventory</a><a href="documents.html">Document Library</a><a class="active" href="map.html">School Map</a>
+</nav></aside>
+<div class="gb-scrim" onclick="document.body.classList.remove('gb-open')"></div>
 <div id="app">
   <header class="top">
+    <button type="button" class="gb-menu" aria-label="Menu" onclick="document.body.classList.toggle('gb-open')">&#9776;</button>
     <div class="brand">
       <img class="logo" src="logo.png" alt="Yayasan Sultan Haji Hassanal Bolkiah">
       <div><h1>SYSHHB Map</h1><p>Yayasan Sultan Haji Hassanal Bolkiah</p></div>
