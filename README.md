@@ -49,3 +49,24 @@ Users are managed inside the app: sign in as an Admin, open **Admin → Users**,
 - Share the OneDrive folder too: Admin and Editor need **Can edit**, Viewer needs **Can view**. The app roles control what each person can do in the app; the folder sharing controls what OneDrive allows.
 
 **Admin → Audit log** shows who did what and when (Brunei time): renamed rooms, new years, CSV imports, users added, removed or changed, and editor and admin sign-ins. Filter by person or action, and export it as CSV. It is stored as `audit.json` in the same folder (latest 5000 entries).
+
+## Email suggestions when adding a user (optional)
+In Admin → Users, typing a name or email shows matching people from Microsoft 365, so you pick instead of typing the whole address. For this, add the Microsoft Graph **delegated** permission `User.ReadBasic.All` to the app registration and grant admin consent (same place as step 1). Without it, the box still suggests people already on the list and the owners.
+
+## Recording every sign-in (including Viewers)
+Every sign-in is saved with the person's name, email, role and device (Desktop or Mobile) and appears in **Admin → Audit log** (filter: Signed in). It is stored in the OneDrive folder as `signins/signins.json` (latest 5000).
+
+Viewers only have "Can view" on the main folder, so they cannot save anything there. To record their sign-ins too:
+1. In OneDrive (as it.helpdesk), open `SYSHHB-School-Map` and create a subfolder named **signins**.
+2. Share only that subfolder with everyone who signs in (or the whole staff group) as **Can edit**.
+
+Viewers can then only add sign-in records; they still cannot touch the class names or the access list, because the main folder stays view-only for them. If the subfolder is not shared, Admin and Editor sign-ins are still recorded and Viewer sign-ins are skipped silently.
+
+## New users are Viewers automatically, and their sign-in is recorded straight away
+Nobody has to be added first. Anyone in your Microsoft 365 who signs in is a **Viewer** (`DEFAULT_ROLE`), is recorded in **Admin → Audit log** with name and email, and appears in **Admin → Users** as "Added automatically at first sign-in". An Admin can then raise them to Editor or Admin from the dropdown.
+
+To make this work with no per-person sharing, use two organisation-wide links in OneDrive (as it.helpdesk):
+1. **Main folder** `SYSHHB-School-Map` → Share → Copy link → *People in Yayasan with the link* → **Can view**. Put this link in `FOLDER_LINK` in `config.js`. Every staff member can now open the maps, so every new user is automatically a Viewer.
+2. **Subfolder** `SYSHHB-School-Map/signins` (create it) → Share → Copy link → *People in Yayasan with the link* → **Can edit**. Put this link in `SIGNIN_LINK`. People can only add their own sign-in record there; they cannot change class names or the access list.
+
+Editors and Admins still need personal **Can edit** access to the main folder. When an Admin adds a user or raises someone’s role in the app, the app tries to share the OneDrive folder with them automatically (Can view for Viewer, Can edit for Editor and Admin) and shows a message. If OneDrive refuses, share the folder by hand.
