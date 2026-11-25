@@ -1110,6 +1110,7 @@ main{padding:0 20px 20px}
 @media (max-width:860px){.wrap>main{height:max(420px,calc(100dvh - 380px));padding:0}.wrap>main.rec{height:max(460px,calc(100dvh - 260px))}.wrap>.bar{padding-bottom:8px}}
 @media (max-width:860px){td.in{min-width:0;width:auto}.cellin{min-width:140px}}
 body.nav-open{overflow:hidden}
+.hero .actions .btn,.hero .actions .btn:active{transform:none!important;transition:background .15s,color .15s}
 /* sign-in page (tracker layout) */
 #login.fade{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .45s}
 #login .ml-go svg{width:28px;height:28px;flex:none}
@@ -1998,7 +1999,7 @@ function setView(v,fromPop){
   $('modeSeg').hidden=$('floors').hidden=$('tabs').hidden=v!=='map'; document.querySelector('main').classList.toggle('rec',v!=='map'); $('panel').style.display=v!=='map'?'none':'';
   if(v==='map'){paintLabels()} else if(v==='rec')renderTable(); else renderAdmin(); syncBnav();
 }
-function goBack(){if(history.state&&history.state.v&&history.state.v!=='map'){history.back()}else setView('map',true)}
+function goBack(){setView('map')}
 document.querySelectorAll('#viewSeg button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='map'&&S.view!=='map')goBack(); else setView(b.dataset.v)});
 $('admBack').onclick=goBack; $('recBack').onclick=goBack;
 try{history.replaceState({v:'map'},'')}catch(e){}
