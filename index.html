@@ -1102,10 +1102,13 @@ main{padding:0 20px 20px}
 .searchrow .allw{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);white-space:nowrap;font-weight:600}
 .wrap>.bar{padding:0 0 12px}
 .wrap>main{padding:0;gap:16px;height:max(480px,calc(100dvh - 420px))}
-.wrap>main.rec{height:auto;min-height:60vh}
-.wrap>main.rec #recView,.wrap>main.rec #admView{position:static}
+.wrap>main.rec{height:max(520px,calc(100dvh - 300px))}
+#recView,#admView{position:relative;min-height:0;min-width:0}
+.wrap>main{min-width:0}
+.wrap{min-width:0}
 .bnav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-@media (max-width:860px){.wrap>main{height:max(420px,calc(100dvh - 380px));padding:0}.wrap>.bar{padding-bottom:8px}}
+@media (max-width:860px){.wrap>main{height:max(420px,calc(100dvh - 380px));padding:0}.wrap>main.rec{height:max(460px,calc(100dvh - 260px))}.wrap>.bar{padding-bottom:8px}}
+@media (max-width:860px){td.in{min-width:0;width:auto}.cellin{min-width:140px}}
 body.nav-open{overflow:hidden}
 /* sign-in page (tracker layout) */
 #login.fade{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .45s}
