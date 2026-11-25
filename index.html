@@ -426,6 +426,14 @@ html,body{overscroll-behavior:none}
 .nav{cursor:pointer;outline:none}.nav .navhit{fill:transparent;stroke:none}
 .nav:hover .navhit,.nav:focus-visible .navhit{fill:#ffffff55;stroke:#0e5a30;stroke-width:1.6}
 .pl .nav{pointer-events:auto}
+.addRow .sugwrap{position:relative;flex:1 1 220px;min-width:0}.addRow .sugwrap input{width:100%}
+.sug{position:absolute;left:0;right:0;top:44px;z-index:25;background:var(--surface);border:1px solid var(--line2);border-radius:10px;box-shadow:0 12px 30px rgba(8,20,14,.3);max-height:290px;overflow:auto;padding:4px}
+.sug[hidden]{display:none}
+.sitem{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;border-radius:8px;padding:8px 10px;color:var(--ink)}
+.sitem:hover,.sitem.act{background:var(--surface2)}
+.sitem .st{flex:1;min-width:0;display:flex;flex-direction:column}.sitem .st b{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sitem .st span{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sitem em{font-style:normal;font-size:11px;font-weight:700;padding:1px 8px;border-radius:10px;background:var(--brand-soft);color:var(--brand)}
+.snote{padding:10px;font-size:12.5px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -1380,8 +1388,51 @@ function renderUsers(){
     if(access.users[e]){toast('That user is already on the list. Change the role in the table.'); return}
     accessChange(()=>{access.users[e]={role:rs.value,name:nm.value.trim().slice(0,60),added:new Date().toISOString(),by:account?account.username:'demo'}; logEvent('access',{act:'add',u:e,b:rs.value})},e+' added as '+ROLE_LABEL[rs.value]);
   };
-  em.addEventListener('keydown',ev=>{if(ev.key==='Enter')add.click()});
-  f.append(em,nm,rs,add); b.appendChild(f);
+  const sw=el2('div','sugwrap'); const sug=el2('div','sug'); sug.hidden=true; sw.append(em,sug);
+  let items=[], act=-1;
+  const hideSug=()=>{sug.hidden=true; act=-1};
+  const pickSug=i=>{const it=items[i]; if(!it)return; em.value=it.email; if(!nm.value.trim()&&it.name)nm.value=it.name; hideSug(); nm.focus()};
+  function drawSug(list,note){
+    items=list; sug.innerHTML=''; act=-1;
+    list.forEach((it,i)=>{const r=document.createElement('button'); r.type='button'; r.className='sitem';
+      const l=el2('span','st'); l.appendChild(el2('b','',it.name||it.email)); l.appendChild(el2('span','',it.email)); r.appendChild(l);
+      if(it.listed)r.appendChild(el2('em','',it.owner?'Owner':'Added'));
+      r.onmousedown=ev=>{ev.preventDefault(); pickSug(i)}; sug.appendChild(r)});
+    if(note)sug.appendChild(el2('div','snote',note));
+    sug.hidden=!(list.length||note);
+  }
+  function localMatches(q){
+    const seen=new Set(), out=[]; const add1=(e,n,owner)=>{e=lc(e); if(!e||seen.has(e)||!(e.includes(q)||lc(n).includes(q)))return; seen.add(e); out.push({email:e,name:n||'',listed:true,owner:!!owner})};
+    cfgAdmins().forEach(e=>add1(e,(access.users[e]||{}).name,true)); Object.keys(access.users).forEach(e=>add1(e,access.users[e].name)); if(account)add1(account.username,account.name,cfgAdmins().includes(lc(account.username)));
+    return out;
+  }
+  async function dirSearch(q){
+    if(DEMO||!msalApp||!account)return null;
+    let t; try{t=(await msalApp.acquireTokenSilent({scopes:['User.ReadBasic.All'],account})).accessToken}catch(e){return null}
+    const k=q.replace(/["\\]/g,''); if(!k)return [];
+    const url=GRAPH+'/users?$search='+encodeURIComponent('"displayName:'+k+'" OR "mail:'+k+'" OR "userPrincipalName:'+k+'"')+'&$select=displayName,mail,userPrincipalName&$top=8&$count=true';
+    try{const r=await fetch(url,{headers:{Authorization:'Bearer '+t,ConsistencyLevel:'eventual'}}); if(!r.ok)return null; const j=await r.json();
+      return (j.value||[]).map(u=>({email:lc(u.mail||u.userPrincipalName),name:u.displayName||''})).filter(u=>u.email)}catch(e){return null}
+  }
+  let seq=0, tm=null, noteShown=false;
+  em.addEventListener('input',()=>{
+    clearTimeout(tm); const q=lc(em.value).replace(/\s+/g,' '); if(q.length<2){hideSug(); return}
+    const mine=++seq; drawSug(localMatches(q),null);
+    tm=setTimeout(async()=>{
+      const dir=await dirSearch(q); if(mine!==seq)return;
+      const local=localMatches(q); const seen=new Set(local.map(x=>x.email)); const merged=local.slice();
+      (dir||[]).forEach(u=>{if(seen.has(u.email))return; seen.add(u.email); merged.push(Object.assign({listed:!!access.users[u.email]||cfgAdmins().includes(u.email)},u))});
+      drawSug(merged.slice(0,8), dir===null&&!DEMO&&!merged.length?'No match. To suggest people from Microsoft 365, give the app the User.ReadBasic.All permission (see README).':(merged.length?null:'No match found'));
+    },250);
+  });
+  em.addEventListener('keydown',ev=>{
+    const btns=[...sug.querySelectorAll('.sitem')];
+    if(!sug.hidden&&btns.length&&(ev.key==='ArrowDown'||ev.key==='ArrowUp')){ev.preventDefault(); act=(act+(ev.key==='ArrowDown'?1:-1)+btns.length)%btns.length; btns.forEach((x,i)=>x.classList.toggle('act',i===act)); btns[act].scrollIntoView({block:'nearest'}); return}
+    if(ev.key==='Enter'){ev.preventDefault(); if(!sug.hidden&&act>=0)pickSug(act); else add.click(); return}
+    if(ev.key==='Escape')hideSug();
+  });
+  em.addEventListener('blur',()=>setTimeout(hideSug,150));
+  f.append(sw,nm,rs,add); b.appendChild(f);
   const wrap=el2('div','tblScroll adm'); const t=document.createElement('table'); t.innerHTML='<thead><tr><th>User</th><th>Role</th><th>Added</th><th></th></tr></thead>'; const tb=document.createElement('tbody');
   const me=account?lc(account.username):'';
   const rows=[]; cfgAdmins().forEach(e=>rows.push({e,owner:true,u:access.users[e]||{}}));
